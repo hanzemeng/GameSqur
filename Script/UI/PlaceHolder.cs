@@ -14,11 +14,19 @@ public class PlaceHolder : MonoBehaviour
             UI.Cancel();
             return;
         }
-        UI.Selected = ActualUnit;
-        for(int i=2; i<gameObject.transform.parent.childCount; i+=2)
+        if(UI.PlayerTeam == ActualUnit.GetComponent<Unit>().Team)
         {
-            gameObject.transform.parent.GetChild(i).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
+            UI.Selected = ActualUnit;
+            for (int i = 2; i < gameObject.transform.parent.childCount; i += 2)
+            {
+                gameObject.transform.parent.GetChild(i).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
+            }
+            GetComponent<SpriteRenderer>().color = new Color(1, 1, 0, 1);
         }
-        GetComponent<SpriteRenderer>().color = new Color(1, 1, 0, 1);
+        else
+        {
+            Debug.Log("He / She is not on Your Side");
+        }
+        
     }
 }

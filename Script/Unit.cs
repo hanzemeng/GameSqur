@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using static KeyTerm;
+using static Message;
 using static Weapon;
 using static Armor;
 
@@ -146,11 +147,11 @@ public class Unit : MonoBehaviour
 					Target.GetComponent<Unit>().HitPoint -= Damage;
 				}
 			}
-			Debug.Log(gameObject.name + " Attacked" + " " + Target.name);
+			Debug.Log(gameObject.name + " Attacked " + Target.name);
 		}
 		else
 		{
-			Debug.Log("Out of Range");
+			Debug.Log(Message.OUT_OF_RANGE);
 		}
 		UI.ClearUnit(gameObject);
 
@@ -222,7 +223,7 @@ public class Unit : MonoBehaviour
 			}
 			else
 			{
-				Debug.Log("He/She is not on Your Side");
+				Debug.Log(Message.UNIT_NOT_ON_OUR_SIDE);
 			}
 		}
     }

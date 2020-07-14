@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using static KeyTerm;
+using static Message;
 
 public class UI : MonoBehaviour
 {
@@ -75,8 +76,6 @@ public class UI : MonoBehaviour
         }
         if(Input.GetKeyDown("e"))
         {
-			Route = PathFinding(GetTile(5,5), GetTile(5, 5), GetTile(10, 10));
-			AssignRoute(Route);
 			Cancel();
         	CurrentTurn++;
         	GameObject.Find("TurnCount").GetComponent<TextMesh>().text = CurrentTurn.ToString();
@@ -86,8 +85,8 @@ public class UI : MonoBehaviour
         }
 		if(MoveMode)
 		{
-			Clear();
-			if(Physics.Raycast(Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition), Vector3.forward, out Hit, 11))
+			ClearRoute();
+			if (Physics.Raycast(Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition), Vector3.forward, out Hit, 11))
 			{
 				CenterX = Hit.transform.parent.GetComponent<Tile>().XCor;
 				CenterY = Hit.transform.parent.GetComponent<Tile>().YCor;
@@ -95,7 +94,6 @@ public class UI : MonoBehaviour
 				AssignRoute(Route);
 			}
 		}
-		
 	}
 
 	public void AddEvent(string EventType, GameObject Executor, GameObject TargetObject)
@@ -104,7 +102,7 @@ public class UI : MonoBehaviour
 		{
 			if(Executor.transform.parent.GetComponent<Tile>().XCor == TargetObject.transform.parent.GetComponent<Tile>().XCor && Executor.transform.parent.GetComponent<Tile>().YCor == TargetObject.transform.parent.GetComponent<Tile>().YCor)
 			{
-				Debug.Log("Same Location");
+				Debug.Log(Message.SAME_LOCATION);
 				return;
 			}
 			else
@@ -126,7 +124,7 @@ public class UI : MonoBehaviour
 		{
 			if(null == TargetObject.GetComponent<Unit>())
 			{
-				Debug.Log("Not a Unit");
+				Debug.Log(Message.NOT_A_UNIT);
 				return;
 			}
 			else
@@ -138,10 +136,7 @@ public class UI : MonoBehaviour
 		Executor.GetComponent<Unit>().MovePoint = 0;
 		Executor.GetComponent<Unit>().Action = EventType;
 		Executor.GetComponent<SpriteRenderer>().color = Color.red;
-		
-
     }
-		
 	void UpdateEvent()
 	{
 		for(int i=0; i<Unit.Length; i++)
@@ -166,6 +161,7 @@ public class UI : MonoBehaviour
 			} 		
 		}
 	}
+
 	public void ClearUnit(GameObject Unit)
 	{
 		Unit.GetComponent<SpriteRenderer>().color = Color.white;
@@ -240,7 +236,7 @@ public class UI : MonoBehaviour
 	
     public void Cancel()
     {
-		Clear();
+		ClearRoute();
 		OpenSideBar(false);
 		if(null != Selected)
 		{
@@ -708,13 +704,17 @@ public class UI : MonoBehaviour
 		}
 		return Path;
 	}
-	public void Clear()
+	public void ClearRoute()
 	{
-		for(int i=0; i<MapSizeX;i++)
+		for(int i= CenterX-LoadSizeX; i< CenterX+LoadSizeX; i++)
 		{
-			for(int e=0; e<MapSizeY; e++)
+			for(int e=CenterY-LoadSizeY; e<CenterY+LoadSizeY; e++)
 			{
-				GetTile(i,e).transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(0,0,0,0);
+				if(null != GetTile(i, e))
+                {
+					GetTile(i, e).transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(0, 0, 0, 0);
+				}
+				
 			}
 		}
 	}
@@ -725,5 +725,4 @@ public class FindTile
 	public GameObject Tile;
 	public float TileScore;
 	public FindTile Previous;
-	public FindTile Next;
 }

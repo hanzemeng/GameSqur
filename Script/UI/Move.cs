@@ -10,7 +10,7 @@ public class Move : MonoBehaviour
 		UI UI = GameObject.Find("UI").GetComponent<UI>();
     	gameObject.SetActive(false);
     	GameObject.Find(KeyTerm.ATTACK_CMD).SetActive(false);
-		UI.OpenSideBar(false, null);
+		UI.OpenSideBar(false);
 		//UI.Selected.GetComponent<Unit>().Draw(UI.Selected.GetComponent<Unit>().LineOfSight+1, "Outline", 1, 1, 1, 0.5f);
     	UI.MoveMode = true;
     }

@@ -17,21 +17,10 @@ public class GridGen : MonoBehaviour
 		MapColumn = 20;
     	DrawSqur(MapRow, MapColumn);
 
-		AddUnit("Redelero", 1, 1);
+		AddUnit("Redelero", 6, 2);
 		AddUnit("Doppelsoldner", 6, 3, KeyTerm.RED);
 		AddUnit("Crossbow", 1, 3);
 		AddUnit("Longbow", 5, 5);
-		EditTile("6, 3 T", KeyTerm.GRASS, KeyTerm.HOLE);
-		EditTile("5, 3 T", KeyTerm.GRASS, KeyTerm.HOLE);
-		EditTile("4, 3 T", KeyTerm.GRASS, KeyTerm.HOLE);
-		EditTile("7, 3 T", KeyTerm.GRASS, KeyTerm.HOLE);
-		EditTile("7, 4 T", KeyTerm.GRASS, KeyTerm.HOLE);
-		EditTile("7, 5 T", KeyTerm.GRASS, KeyTerm.HOLE);
-		EditTile("7, 6 T", KeyTerm.GRASS, KeyTerm.HOLE);
-		EditTile("7, 7 T", KeyTerm.GRASS, KeyTerm.HOLE);
-		EditTile("6, 7 T", KeyTerm.GRASS, KeyTerm.HOLE);
-		EditTile("5, 7 T", KeyTerm.GRASS, KeyTerm.HOLE);
-		EditTile("4, 7 T", KeyTerm.GRASS, KeyTerm.HOLE);
 
 		UI UI = GameObject.Find("UI").GetComponent<UI>();
 		UI.Map = tempMap;
