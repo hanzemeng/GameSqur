@@ -120,14 +120,14 @@ public class Unit : MonoBehaviour
 		{
 			if(KeyTerm.SQUARE == AttackRangeType)
 			{
-				if(UI.GetDistance(transform.parent.gameObject, Target.transform.parent.gameObject) > AttackRange*Mathf.Sqrt(2))
+				if(UI.Tool.GetDistance(transform.parent.gameObject, Target.transform.parent.gameObject) > AttackRange*Mathf.Sqrt(2))
 				{
 					InRange = false;
 				}
 			}
 			else if(KeyTerm.RHOMBUS == AttackRangeType)
 			{
-				if(UI.GetDistance(transform.parent.gameObject, Target.transform.parent.gameObject) > AttackRange)
+				if(UI.Tool.GetDistance(transform.parent.gameObject, Target.transform.parent.gameObject) > AttackRange)
 				{
 					InRange = false;
 				}
@@ -159,18 +159,17 @@ public class Unit : MonoBehaviour
 	public void Draw(int Size, int Type, float R, float G, float B, float transparency, string Shape = "Square")
 	{
 		UI = GameObject.Find("UI").GetComponent<UI>();
-		UnitXCor = transform.parent.GetComponent<Tile>().XCor;
-		UnitYCor = transform.parent.GetComponent<Tile>().YCor;
+		
 		for(int i=0; i<Size*2+1; i++)
 		{
 			for(int e=0; e<Size*2+1; e++)
 			{
-				GameObject CurrentTile = UI.GetTile(UnitXCor-Size+i, UnitYCor-Size+e);
+				GameObject CurrentTile = UI.Tool.GetTile(UnitXCor-Size+i, UnitYCor-Size+e);
 				if(null != CurrentTile)
 				{
 					if(KeyTerm.RHOMBUS == Shape)
 					{
-						if(UI.GetDistance(transform.parent.gameObject, CurrentTile) > Size)
+						if(UI.Tool.GetDistance(transform.parent.gameObject, CurrentTile) > Size)
 						{
 							CurrentTile = transform.parent.gameObject;
 						}

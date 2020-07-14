@@ -7,9 +7,11 @@ using static Message;
 
 public class UI : MonoBehaviour
 {
+	public Tool Tool;
+	public PathFinding PathFind;
+
 	public string PlayerTeam;
 	public int CurrentTurn;
-	public GameObject[][] Map;
 	public GameObject[] Unit;
 	public GameObject[] Target;
 	public GameObject Selected;
@@ -24,17 +26,13 @@ public class UI : MonoBehaviour
 	Vector3 NewPosition;
 	bool Check;
 	RaycastHit Hit;
-	public int MapSizeX;
-	public int MapSizeY;
+	
 	int CenterX;
 	int CenterY;
 	int LoadSizeX;
 	int LoadSizeY;
 
-	public FindTile[] OpenList;
-	public FindTile[] CloseList;
-	public int OpenCount;
-	public int CloseCount;
+	
 	FindTile Route;
 	
 	void Start()
@@ -90,7 +88,7 @@ public class UI : MonoBehaviour
 			{
 				CenterX = Hit.transform.parent.GetComponent<Tile>().XCor;
 				CenterY = Hit.transform.parent.GetComponent<Tile>().YCor;
-				Route = PathFinding(Selected.transform.parent.gameObject, Selected.transform.parent.gameObject, GetTile(CenterX, CenterY));
+				Route = PathFind.FindPath(Selected.transform.parent.gameObject, Selected.transform.parent.gameObject, Tool.GetTile(CenterX, CenterY));
 				AssignRoute(Route);
 			}
 		}
@@ -380,13 +378,13 @@ public class UI : MonoBehaviour
 		{
 			CenterX = 10;
 			CenterY = 6;
-			GameObject StartTile = GetTile(CenterX, CenterY);
+			GameObject StartTile = Tool.GetTile(CenterX, CenterY);
 			Camera.transform.position = new Vector3(StartTile.transform.position.x, StartTile.transform.position.y, -10);
 			for(int i=0; i<LoadSizeX*2; i++)
 			{
 				for(int e=0; e<LoadSizeY*2; e++)
 				{
-					GameObject Tile =  GetTile(CenterX - i + LoadSizeX, CenterY - e + LoadSizeY);
+					GameObject Tile = Tool.GetTile(CenterX - i + LoadSizeX, CenterY - e + LoadSizeY);
 					if(null != Tile)
 					{
 						Tile.SetActive(true);
@@ -419,7 +417,7 @@ public class UI : MonoBehaviour
 			DrawSide("Up", false);
 			CenterY++;
 		}
-		GameObject NewCenter = GetTile(CenterX, CenterY);
+		GameObject NewCenter = Tool.GetTile(CenterX, CenterY);
 		Camera.transform.position = new Vector3(NewCenter.transform.position.x, NewCenter.transform.position.y, -10);
 	}
 	void DrawSide(string Side, bool Switch)
@@ -428,7 +426,7 @@ public class UI : MonoBehaviour
 		{
 			for(int i=0; i<LoadSizeX*2; i++)
 			{
-				GameObject Tile =  GetTile(CenterX - i + LoadSizeX, CenterY - LoadSizeY);
+				GameObject Tile = Tool.GetTile(CenterX - i + LoadSizeX, CenterY - LoadSizeY);
 				if(null != Tile)
 				{
 					Tile.SetActive(Switch);
@@ -439,7 +437,7 @@ public class UI : MonoBehaviour
 		{
 			for(int i=0; i<LoadSizeX*2; i++)
 			{
-				GameObject Tile =  GetTile(CenterX - i + LoadSizeX, CenterY + LoadSizeY);
+				GameObject Tile = Tool.GetTile(CenterX - i + LoadSizeX, CenterY + LoadSizeY);
 				if(null != Tile)
 				{
 					Tile.SetActive(Switch);
@@ -450,7 +448,7 @@ public class UI : MonoBehaviour
 		{
 			for(int i=0; i<LoadSizeY*2; i++)
 			{
-				GameObject Tile =  GetTile(CenterX - LoadSizeX, CenterY + LoadSizeY - i);
+				GameObject Tile = Tool.GetTile(CenterX - LoadSizeX, CenterY + LoadSizeY - i);
 				if(null != Tile)
 				{
 					Tile.SetActive(Switch);
@@ -461,7 +459,7 @@ public class UI : MonoBehaviour
 		{
 			for(int i=0; i<LoadSizeY*2; i++)
 			{
-				GameObject Tile =  GetTile(CenterX + LoadSizeX, CenterY + LoadSizeY - i);
+				GameObject Tile = Tool.GetTile(CenterX + LoadSizeX, CenterY + LoadSizeY - i);
 				if(null != Tile)
 				{
 					Tile.SetActive(Switch);
@@ -469,234 +467,16 @@ public class UI : MonoBehaviour
 			}
 		}
 	}
-	public GameObject GetTile(int XCor, int YCor)
-	{
-		if(-1<XCor && -1<YCor)
-		{
-			if(XCor<MapSizeX && YCor<MapSizeY)
-			{
-				return Map[XCor][YCor];
-			}
-		}
-		return null;
-	}
-	public float GetDistance(GameObject Start, GameObject Finish)
-	{
-		if(null == Start || null == Finish)
-		{
-			return 10000;
-		}
-		else
-		{
-			float a,b;
-			a = Start.GetComponent<Tile>().XCor - Finish.GetComponent<Tile>().XCor;
-			b = Start.GetComponent<Tile>().YCor - Finish.GetComponent<Tile>().YCor;
-			return Mathf.Sqrt(Mathf.Pow(a,2) + Mathf.Pow(b,2));
-		}
-	}
-	public FindTile PathFinding(GameObject Origin, GameObject Start, GameObject Finish, FindTile Previous = null)
-	{
-		if(Start == Finish)
-        {
-			CloseList = new FindTile[CloseList.Length];
-			OpenList = new FindTile[OpenList.Length];
-			CloseCount = 0;
-			OpenCount = 0;
 
-			return Previous;
-		}
-		if (Previous == null)
-        {
-			Previous = new FindTile();
-			Previous.Previous = new FindTile();
-			Previous.Tile = Origin;
-			Previous.TileScore = 0;
-			CloseList[CloseCount] = Previous;
-			CloseCount++;
-		}
-		else
-        {
-			CloseList[CloseCount] = OpenList[0];
-			CloseCount++;
 
-			for(int i=0; i<OpenCount;i++)
-            {
-				OpenList[i] = OpenList[i + 1];
-            }
-			OpenCount--;
-		}
-		
-		int StartX = Start.GetComponent<Tile>().XCor;
-		int StartY = Start.GetComponent<Tile>().YCor;
-		
-		bool Check = false;
-		if (Previous.Previous.Tile != GetTile(StartX, StartY-1) && null != GetTile(StartX, StartY-1))
-		{
-			FindTile Up = new FindTile();
-			Up.Previous = Previous;
-			Up.Tile = GetTile(StartX, StartY-1);
-			Up.TileScore = DistanceEstimate(Up.Tile, Finish) + DistanceEstimate(Up.Tile, Origin) + Previous.TileScore;
-			for (int i=0; i< OpenCount; i++)
-			{
-				if(Up.Tile == OpenList[i].Tile)
-				{
-					if(OpenList[i].Previous.TileScore > Up.Previous.TileScore)
-                    {
-						OpenList[i].Previous = Up.Previous;
-					}
-					Check = true;
-					break;
-				}
-			}
-			for (int i = 0; i < CloseCount; i++)
-			{
-				if (Up.Tile == CloseList[i].Tile)
-				{
-					Check = true;
-					break;
-				}
-			}
-			if (!Check)
-			{
-				OpenList[OpenCount] = Up;
-				OpenCount++;
-			}
-		}
-		Check = false;
-		if(Previous.Previous.Tile != GetTile(StartX, StartY+1) && null != GetTile(StartX, StartY+1))
-		{
-			FindTile Down = new FindTile();
-			Down.Previous = Previous;
-			Down.Tile = GetTile(StartX, StartY+1);
-			Down.TileScore = DistanceEstimate(Down.Tile, Finish) + DistanceEstimate(Down.Tile, Origin) + Previous.TileScore;
-			for (int i=0; i< OpenCount; i++)
-			{
-				if(Down.Tile == OpenList[i].Tile)
-				{
-					if (OpenList[i].Previous.TileScore > Down.Previous.TileScore)
-					{
-						OpenList[i].Previous = Down.Previous;
-					}
-					Check = true;
-					break;
-				}
-			}
-			for (int i = 0; i < CloseCount; i++)
-			{
-				if (Down.Tile == CloseList[i].Tile)
-				{
-					Check = true;
-					break;
-				}
-			}
-			if (!Check)
-			{
-				OpenList[OpenCount] = Down;
-				OpenCount++;
-			}
-		}
-		Check = false;
-		if(Previous.Previous.Tile != GetTile(StartX-1, StartY) && null != GetTile(StartX-1, StartY))
-		{
-			FindTile Left = new FindTile();
-			Left.Previous = Previous;
-			Left.Tile = GetTile(StartX-1, StartY);
-			Left.TileScore = DistanceEstimate(Left.Tile, Finish) + DistanceEstimate(Left.Tile, Origin) + Previous.TileScore;
-			for (int i=0; i< OpenCount; i++)
-			{
-				if(GetTile(StartX-1, StartY) == OpenList[i].Tile)
-				{
-					if (OpenList[i].Previous.TileScore > Left.Previous.TileScore)
-					{
-						OpenList[i].Previous = Left.Previous;
-					}
-					Check = true;
-					break;
-				}
-			}
-			for (int i = 0; i < CloseCount; i++)
-			{
-				if (Left.Tile == CloseList[i].Tile)
-				{
-					Check = true;
-					break;
-				}
-			}
-			if (!Check)
-			{
-				OpenList[OpenCount] = Left;
-				OpenCount++;
-			}
-		}
-		Check = false;
-		if(Previous.Previous.Tile != GetTile(StartX+1, StartY) && null != GetTile(StartX+1, StartY))
-		{
-			FindTile Right = new FindTile();
-			Right.Previous = Previous;
-			Right.Tile = GetTile(StartX+1, StartY);
-			Right.TileScore = DistanceEstimate(Right.Tile, Finish) + DistanceEstimate(Right.Tile, Origin) + Previous.TileScore;
-			for(int i=0; i< OpenCount; i++)
-			{
-				if(GetTile(StartX+1, StartY) == OpenList[i].Tile)
-				{
-					if(OpenList[i].Previous.TileScore > Right.Previous.TileScore)
-					{
-						OpenList[i].Previous = Right.Previous;
-					}
-					Check = true;
-					break;
-				}
-			}
-			for (int i = 0; i < CloseCount; i++)
-			{
-				if (Right.Tile == CloseList[i].Tile)
-				{
-					Check = true;
-					break;
-				}
-			}
-			if (!Check)
-			{
-				OpenList[OpenCount] = Right;
-				OpenCount++;
-			}
-		}
-		for(int i=0; i<OpenCount-1; i++)
-        {
-			for(int e=i+1; e<OpenCount; e++)
-            {
-				if(OpenList[i].TileScore> OpenList[e].TileScore)
-                {
-					FindTile temp = OpenList[e];
-					OpenList[e] = OpenList[i];
-					OpenList[i] = temp;
-				}
-			}
-		}
-		return PathFinding(Origin, OpenList[0].Tile, Finish, OpenList[0]);
-	}
-	float DistanceEstimate(GameObject Start, GameObject Target)
-	{
-		float Total = 1;
-		if(Start.transform.childCount > KeyTerm.LAND_INDEX && KeyTerm.LAND == Start.transform.GetChild(KeyTerm.LAND_INDEX).gameObject.name)
-		{
-			Total /= Start.transform.GetChild(KeyTerm.LAND_INDEX).GetComponent<Tile>().SpeedModifier;
-		}
-		
-		if(Start.transform.childCount > KeyTerm.TERRAIN_INDEX && KeyTerm.TERRAIN == Start.transform.GetChild(KeyTerm.TERRAIN_INDEX).gameObject.name)
-		{
-			Total /= Start.transform.GetChild(KeyTerm.TERRAIN_INDEX).GetComponent<Tile>().SpeedModifier;
-		}
-		return GetDistance(Start, Target) + Total;
-	}
 	public GameObject[] AssignRoute(FindTile Route, GameObject[] Path = null, int Count = 0)
-    {
-		if(null == Path)
-        {
+	{
+		if (null == Path)
+		{
 			Path = new GameObject[LoadSizeX * LoadSizeY];
-        }
+		}
 		if (null != Route.Previous)
-        {
+		{
 			Path[Count] = Route.Tile;
 			Count++;
 			Route.Tile.transform.GetChild(0).GetComponent<SpriteRenderer>().color = new Color(0, 0, 1, 1);
@@ -706,23 +486,17 @@ public class UI : MonoBehaviour
 	}
 	public void ClearRoute()
 	{
-		for(int i= CenterX-LoadSizeX; i< CenterX+LoadSizeX; i++)
+		for (int i = CenterX - LoadSizeX; i < CenterX + LoadSizeX; i++)
 		{
-			for(int e=CenterY-LoadSizeY; e<CenterY+LoadSizeY; e++)
+			for (int e = CenterY - LoadSizeY; e < CenterY + LoadSizeY; e++)
 			{
-				if(null != GetTile(i, e))
-                {
-					GetTile(i, e).transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(0, 0, 0, 0);
+				if (null != Tool.GetTile(i, e))
+				{
+					Tool.GetTile(i, e).transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(0, 0, 0, 0);
 				}
-				
+
 			}
 		}
 	}
 }
 
-public class FindTile
-{
-	public GameObject Tile;
-	public float TileScore;
-	public FindTile Previous;
-}

@@ -21,21 +21,36 @@ public class GridGen : MonoBehaviour
 		AddUnit("Doppelsoldner", 6, 3, KeyTerm.RED);
 		AddUnit("Crossbow", 1, 3);
 		AddUnit("Longbow", 5, 5);
-
-		UI UI = GameObject.Find("UI").GetComponent<UI>();
-		UI.Map = tempMap;
-		UI.MapSizeX = MapRow;
-		UI.MapSizeY = MapColumn;
-		UI.OpenList = new FindTile[MapRow*MapColumn];
-		UI.CloseList = new FindTile[MapRow*MapColumn];
-		UI.CloseCount = 0;
-		UI.OpenCount = 0;
-		UI.Unit = new GameObject[UnitID];
-		UI.Target = new GameObject[UnitID];
+		
+		InitializeUI();
+		
 		Destroy(GameObject.Find("Initialize"));
     }
 
-    void DrawSqur(int RowCount, int ColumnCount)
+	void InitializeUI()
+    {
+		UI UI = GameObject.Find("UI").GetComponent<UI>();
+
+		Tool Tool = new Tool();
+		Tool.MapSizeX = MapRow;
+		Tool.MapSizeY = MapColumn;
+		Tool.Map = tempMap;
+		UI.Tool = Tool;
+
+		PathFinding PathFind = new PathFinding();
+		PathFind.UI = UI;
+		PathFind.OpenList = new FindTile[MapRow * MapColumn];
+		PathFind.CloseList = new FindTile[MapRow * MapColumn];
+		PathFind.CloseCount = 0;
+		PathFind.OpenCount = 0;
+		UI.PathFind = PathFind;
+
+		UI.Unit = new GameObject[UnitID];
+		UI.Target = new GameObject[UnitID];
+	}
+
+
+	void DrawSqur(int RowCount, int ColumnCount)
     {
 		tempMap = new GameObject[RowCount][];
 		GameObject StartLoc = GameObject.Find("StartLoc");
