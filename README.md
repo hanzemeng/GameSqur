@@ -1,2 +1,2 @@
 # GameSqur
-A Unity 2d turn-based strategy created for fun. 
+A Unity 2d turn-based strategy game created for fun. 
