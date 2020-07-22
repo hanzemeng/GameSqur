@@ -6,6 +6,7 @@
    //Action
    public static string MOVE_CMD = "Move";
    public static string ATTACK_CMD = "Attack";
+   public static string STOP_CMD = "Stop";
    public static string NONE = "None";
    //Map
    public static string OUTLINE = "Outline";

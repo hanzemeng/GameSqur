@@ -1,33 +1,26 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-using static KeyTerm;
+﻿using UnityEngine;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 public class GridGen : MonoBehaviour
 {
-	public int UnitID;
-	public GameObject[][] tempMap;
-	public int MapRow;
-	public int MapColumn;
+	public int TotalUnit;
+	GameObject[][] tempMap;
+	int MapRow;
+	int MapColumn;
     void Awake()
     {
-    	UnitID = 0;
-		MapRow = 30;
-		MapColumn = 20;
-    	DrawSqur(MapRow, MapColumn);
+		TotalUnit = 0;
+    	DrawSqur(true);
 
-		AddUnit("Redelero", 6, 2);
-		AddUnit("Doppelsoldner", 6, 3, KeyTerm.RED);
-		AddUnit("Crossbow", 1, 3);
-		AddUnit("Longbow", 5, 5);
-		
+		//MapEdit();
+		//SaveMap("/3.SQR");
 		InitializeUI();
 		
 		Destroy(GameObject.Find("Initialize"));
     }
-
-	void InitializeUI()
+	
+    void InitializeUI()
     {
 		UI UI = GameObject.Find("UI").GetComponent<UI>();
 
@@ -45,20 +38,68 @@ public class GridGen : MonoBehaviour
 		PathFind.OpenCount = 0;
 		UI.PathFind = PathFind;
 
-		UI.Unit = new GameObject[UnitID];
-		UI.Target = new GameObject[UnitID];
+		AI AI = new AI();
+		AI.UI = UI;
+		UI.AI = AI;
+
+		UI.Unit = new GameObject[TotalUnit];
+		UI.Target = new GameObject[TotalUnit];
+	}
+	void MapEdit()
+    {
+		AddUnit("Redelero");
+		AddUnit("Redelero");
+		AddUnit("Redelero");
+		AddUnit("Doppelsoldner");
+		AddUnit("Doppelsoldner");
+		AddUnit("Doppelsoldner");
+		AddUnit("Crossbow");
+		AddUnit("Crossbow");
+		AddUnit("Crossbow");
+		AddUnit("Longbow");
+		AddUnit("Longbow");
+		AddUnit("Longbow");
+		AddUnit("Doppelsoldner", KeyTerm.RED);
+		AddUnit("Doppelsoldner", KeyTerm.RED);
+		AddUnit("Doppelsoldner", KeyTerm.RED);
+		AddUnit("Crossbow", KeyTerm.RED);
+		AddUnit("Crossbow", KeyTerm.RED);
+		AddUnit("Longbow", KeyTerm.RED);
+		AddUnit("Longbow", KeyTerm.RED);
+		AddUnit("Longbow", KeyTerm.RED);
+		AddUnit("Longbow", KeyTerm.RED);
+
 	}
 
-
-	void DrawSqur(int RowCount, int ColumnCount)
+	void DrawSqur(bool LoadPath = true, int RowCount = 15, int ColumnCount = 15)
     {
-		tempMap = new GameObject[RowCount][];
+		TileInfo Data = null;
+		if(LoadPath)
+		{
+			BinaryFormatter Formatter = new BinaryFormatter();
+			string Path = FolderPath.MapPath + "/Choose.SQR";
+			FileStream Stream = new FileStream(Path, FileMode.Open);
+			string MapPath = Formatter.Deserialize(Stream) as string;
+			Stream.Close();
+			Data = LoadMap(MapPath);
+			MapRow = Data.MapRow;
+			MapColumn = Data.MapColumn;
+		}
+		else
+        {
+			MapRow = 50;
+			MapColumn = 50;
+		}
+
+		tempMap = new GameObject[MapRow][];
 		GameObject StartLoc = GameObject.Find("StartLoc");
     	GameObject Map = GameObject.Find("Map");
-    	for(int i=0; i<RowCount; i++)
+		int Count = 0;
+		
+    	for(int i=0; i< MapRow; i++)
     	{
-			GameObject[] tempColum = new GameObject[ColumnCount];
-    		for(int e=0; e<ColumnCount; e++)
+			GameObject[] tempColum = new GameObject[MapColumn];
+    		for(int e=0; e< MapColumn; e++)
     		{
     			GameObject CurrentTile = Instantiate(StartLoc);
 				tempColum[e] = CurrentTile;
@@ -68,7 +109,24 @@ public class GridGen : MonoBehaviour
         		CurrentTile.AddComponent<Tile>();
 				CurrentTile.GetComponent<Tile>().XCor = i;
 				CurrentTile.GetComponent<Tile>().YCor = e;
-        		RandomMap(CurrentTile);
+				if(LoadPath)
+                {
+					CurrentTile.GetComponent<Tile>().Land = Data.Land[Count];
+					CurrentTile.GetComponent<Tile>().Terrain = Data.Terrain[Count];
+					CurrentTile.GetComponent<Tile>().Unit = Data.Unit[Count];
+					if(null != CurrentTile.GetComponent<Tile>().Unit)
+                    {
+						CurrentTile.GetComponent<Tile>().UnitID = Data.UnitID[Count];
+						CurrentTile.GetComponent<Tile>().UnitTeam = Data.UnitTeam[Count];
+						TotalUnit++;
+					}
+					Count++;
+				}
+				else
+                {
+					RandomMap(CurrentTile);
+				}
+        		
     		}
 			tempMap[i] = tempColum;
     	}  
@@ -105,7 +163,7 @@ public class GridGen : MonoBehaviour
 		CurrentTile.Land = Land;
 		CurrentTile.Terrain = Terrain;
     }
-	void AddUnit(string Unit, int XCor = -1, int YCor = -1, string Team = "Blue")
+	void AddUnit(string Unit, string Team = "Blue", int XCor = -1, int YCor = -1)
 	{
 		Tile CurrentTile;
 		if(-1 == XCor && -1 == YCor)
@@ -119,13 +177,13 @@ public class GridGen : MonoBehaviour
 		if(null == CurrentTile.Unit)
 		{
 			CurrentTile.Unit = Unit;
+			CurrentTile.UnitID = TotalUnit;
 			CurrentTile.UnitTeam = Team;
-			CurrentTile.ID = UnitID;
-			UnitID++;
+			TotalUnit++;
 		}
 		else
 		{
-			AddUnit(Unit);
+			AddUnit(Unit, Team);
 		}
 	}
 	string ChooseOption(string[] Type, int[] Prob)
@@ -142,4 +200,54 @@ public class GridGen : MonoBehaviour
 		}
 		return null;
 	}
+	void SaveMap(string Name)
+	{
+		BinaryFormatter Formatter = new BinaryFormatter();
+		string SavePath = FolderPath.MapPath + Name;
+		TileInfo Data = new TileInfo();
+		Data.MapRow = MapRow;
+		Data.MapColumn = MapColumn;
+		Data.Land = new string[MapRow * MapColumn];
+		Data.Terrain = new string[MapRow * MapColumn];
+		Data.Unit = new string[MapRow * MapColumn];
+		Data.UnitID = new int[MapRow * MapColumn];
+		Data.UnitTeam = new string[MapRow * MapColumn];
+		int Count = 0;
+		for(int i = 0; i < MapRow; i++)
+		{
+			for(int e = 0; e < MapColumn; e++)
+			{
+				Data.Land[Count] = tempMap[i][e].GetComponent<Tile>().Land;
+				Data.Terrain[Count] = tempMap[i][e].GetComponent<Tile>().Terrain;
+				Data.Unit[Count] = tempMap[i][e].GetComponent<Tile>().Unit;
+				Data.UnitID[Count] = tempMap[i][e].GetComponent<Tile>().UnitID;
+				Data.UnitTeam[Count] = tempMap[i][e].GetComponent<Tile>().UnitTeam;
+				Count++;
+			}
+		}
+		FileStream Stream = new FileStream(SavePath, FileMode.Create);
+		Formatter.Serialize(Stream, Data);
+		Stream.Close();
+	}
+	TileInfo LoadMap(string Path)
+	{
+		BinaryFormatter Formatter = new BinaryFormatter();
+		string LoadPath = FolderPath.MapPath + Path;
+		FileStream Stream = new FileStream(LoadPath, FileMode.Open);
+		TileInfo Data = Formatter.Deserialize(Stream) as TileInfo;
+		Stream.Close();
+		return Data;
+	}
+}
+
+[System.Serializable]
+public class TileInfo
+{
+	public int MapRow;
+	public int MapColumn;
+	public string[] Land;
+	public string[] Terrain;
+	public string[] Unit;
+	public int[] UnitID;
+	public string[] UnitTeam;
 }

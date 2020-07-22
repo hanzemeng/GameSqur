@@ -1,10 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-using static KeyTerm;
-using static LandInfo;
-using static TerrainInfo;
+﻿using UnityEngine;
 
 public class Tile : MonoBehaviour
 {
@@ -13,6 +7,7 @@ public class Tile : MonoBehaviour
 	public string Land;
     public string Terrain;
     public string Unit;
+	public int UnitID;
 	public string UnitTeam;
 	public float MoveRequire;
     public float SpeedModifier;
@@ -20,7 +15,6 @@ public class Tile : MonoBehaviour
 	public float[] AttackTypeModifier;
 	public float DefenceModifier;
 	public float[] DefenceTypeModifier;
-	public int ID;
 	void Start()
 	{
 		DrawMap();
@@ -97,8 +91,8 @@ public class Tile : MonoBehaviour
     	{
     		temp = Instantiate(GameObject.Find(Unit));
     		temp.name = GameObject.Find(Unit).name;
+			UI.Unit[UnitID] = temp;
 			temp.GetComponent<Unit>().Team = UnitTeam;
-			UI.Unit[ID] = temp; 
     		temp.transform.parent = transform;
     		temp.transform.position = new Vector3(transform.position.x, transform.position.y,-2);
     	}

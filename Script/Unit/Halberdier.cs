@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class Halberdier : Unit
+﻿public class Halberdier : Unit
 {
     void Awake()
     {

@@ -1,13 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlaceHolder : MonoBehaviour
 {
+    public GameObject ActualUnit;
+    void OnMouseEnter()
+    {
+        Cursor.SetCursor(CursorImage.HoverCursor, Vector2.zero, CursorMode.ForceSoftware);
+    }
+    void OnMouseExit()
+    {
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.ForceSoftware);
+    }
     void OnMouseDown()
     {
         UI UI = GameObject.Find("UI").GetComponent<UI>();
-        GameObject ActualUnit = GameObject.Find(gameObject.name.Split(' ')[0]);
         if(UI.AttackMode)
         {
             UI.AddEvent("Attack", UI.Selected, ActualUnit);
@@ -16,7 +22,12 @@ public class PlaceHolder : MonoBehaviour
         }
         if(UI.PlayerTeam == ActualUnit.GetComponent<Unit>().Team)
         {
+            if(null != UI.Selected)
+            {
+                UI.PathFind.ClearRoute(UI.Selected.GetComponent<Unit>().MoveRoute);
+            }
             UI.Selected = ActualUnit;
+            UI.Selected.GetComponent<Unit>().OnSelecte();
             for (int i = 2; i < gameObject.transform.parent.childCount; i += 2)
             {
                 gameObject.transform.parent.GetChild(i).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
@@ -25,7 +36,7 @@ public class PlaceHolder : MonoBehaviour
         }
         else
         {
-            Debug.Log("He / She is not on Your Side");
+            Debug.Log(Message.UNIT_NOT_ON_OUR_SIDE);
         }
         
     }

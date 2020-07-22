@@ -20,14 +20,10 @@ public class PathFinding
 	{
 		if (Start == Finish)
 		{
-			CloseList = new FindTile[CloseList.Length];
-			OpenList = new FindTile[OpenList.Length];
-			CloseCount = 0;
-			OpenCount = 0;
-
+			Reset();
 			return Previous;
 		}
-		if (Previous == null)
+		if(Previous == null)
 		{
 			Previous = new FindTile();
 			Previous.Previous = new FindTile();
@@ -65,6 +61,7 @@ public class PathFinding
 					if (OpenList[i].Previous.TileScore > Up.Previous.TileScore)
 					{
 						OpenList[i].Previous = Up.Previous;
+						OpenList[i].TileScore = Up.TileScore;
 					}
 					Check = true;
 					break;
@@ -98,6 +95,7 @@ public class PathFinding
 					if (OpenList[i].Previous.TileScore > Down.Previous.TileScore)
 					{
 						OpenList[i].Previous = Down.Previous;
+						OpenList[i].TileScore = Down.TileScore;
 					}
 					Check = true;
 					break;
@@ -131,6 +129,7 @@ public class PathFinding
 					if (OpenList[i].Previous.TileScore > Left.Previous.TileScore)
 					{
 						OpenList[i].Previous = Left.Previous;
+						OpenList[i].TileScore = Left.TileScore;
 					}
 					Check = true;
 					break;
@@ -164,6 +163,7 @@ public class PathFinding
 					if (OpenList[i].Previous.TileScore > Right.Previous.TileScore)
 					{
 						OpenList[i].Previous = Right.Previous;
+						OpenList[i].TileScore = Right.TileScore;
 					}
 					Check = true;
 					break;
@@ -211,5 +211,41 @@ public class PathFinding
 		}
 		return UI.Tool.GetDistance(Start, Target) + Total;
 	}
-	
+	public FindTile FlipRoute(FindTile Route)
+	{
+		FindTile Current = Route;
+		FindTile Result = null;
+		while (null != Current)
+		{
+			FindTile temp = Current;
+			Current = Current.Previous;
+			temp.Previous = Result;
+			Result = temp;
+		}
+		Result = Result.Previous;
+		return Result;
+	}
+	public void DrawRoute(FindTile Route)
+	{
+		if (null != Route && null != Route.Tile)
+		{
+			Route.Tile.transform.GetChild(KeyTerm.OUTLINE_INDEX).GetComponent<SpriteRenderer>().color = new Color(0, 0, 1, 1);
+			DrawRoute(Route.Previous);
+		}
+	}
+	public void ClearRoute(FindTile Route)
+    {
+		if (null != Route && null != Route.Tile)
+		{
+			Route.Tile.transform.GetChild(KeyTerm.OUTLINE_INDEX).GetComponent<SpriteRenderer>().color = new Color(0, 0, 0, 0);
+			ClearRoute(Route.Previous);
+		}
+	}
+	void Reset()
+    {
+		CloseList = new FindTile[CloseList.Length];
+		OpenList = new FindTile[OpenList.Length];
+		CloseCount = 0;
+		OpenCount = 0;
+	}
 }

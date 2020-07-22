@@ -1,14 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using UnityEditor;
 using UnityEngine;
-
-using static KeyTerm;
-using static Message;
+using UnityEngine.SceneManagement;
 
 public class UI : MonoBehaviour
 {
 	public Tool Tool;
 	public PathFinding PathFind;
+	FindTile Route;
+	public AI AI;
 
 	public string PlayerTeam;
 	public int CurrentTurn;
@@ -20,28 +19,27 @@ public class UI : MonoBehaviour
 	public bool Destination;
 	public GameObject Attack;
 	public bool AttackMode;
+	public GameObject Stop;
 
 	GameObject Camera;
 	Vector3 CurrentPosition;
 	Vector3 NewPosition;
 	bool Check;
 	RaycastHit Hit;
-	
 	int CenterX;
 	int CenterY;
 	int LoadSizeX;
 	int LoadSizeY;
-
-	
-	FindTile Route;
 	
 	void Start()
 	{
+		Cursor.SetCursor(null, Vector2.zero, CursorMode.ForceSoftware);
 		Camera = GameObject.Find("MainCamera");
 		PlayerTeam = KeyTerm.BLUE;
 		CurrentTurn = 1;
 		Move = GameObject.Find(KeyTerm.MOVE_CMD);
 		Attack = GameObject.Find(KeyTerm.ATTACK_CMD);
+		Stop = GameObject.Find(KeyTerm.STOP_CMD);
 		LoadSizeX = 10;
 		LoadSizeY = 6;
 		Check = false;
@@ -50,52 +48,62 @@ public class UI : MonoBehaviour
 		OpenSideBar(false);
 		DispalyScreen();
 		UpdateFog();
+		AI.AIMove();
 	}
 	void FixedUpdate()
 	{
+		if(Input.GetKey(KeyCode.Escape))
+		{
+			SceneManager.LoadScene("LevelSelect");
+		}
+
 		if(Input.GetMouseButton(1))
         {
+			Cursor.SetCursor(CursorImage.DragCursor, Vector2.zero, CursorMode.ForceSoftware);
 			DragScreen();
         }
 		else if(Input.GetMouseButtonUp(1))
         {
-        	Check = false;
+			Cursor.SetCursor(null, Vector2.zero, CursorMode.ForceSoftware);
+			Check = false;
         }
 	}
 	void Update()
     {
         if(Input.GetMouseButton(1))
         {
-        	Cancel();
+			Cancel();
         }
 		else if(Input.GetMouseButtonUp(1))
         {
-        	Check = false;
+			Cursor.SetCursor(null, Vector2.zero, CursorMode.ForceSoftware);
+			Check = false;
         }
         if(Input.GetKeyDown("e"))
         {
+			
 			Cancel();
         	CurrentTurn++;
         	GameObject.Find("TurnCount").GetComponent<TextMesh>().text = CurrentTurn.ToString();
 			UpdateEvent();
-        	RemoveUnit();
 			UpdateFog();
-        }
+			AI.AIMove();
+		}
 		if(MoveMode)
 		{
-			ClearRoute();
+			PathFind.ClearRoute(Route);
 			if (Physics.Raycast(Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition), Vector3.forward, out Hit, 11))
 			{
 				CenterX = Hit.transform.parent.GetComponent<Tile>().XCor;
 				CenterY = Hit.transform.parent.GetComponent<Tile>().YCor;
 				Route = PathFind.FindPath(Selected.transform.parent.gameObject, Selected.transform.parent.gameObject, Tool.GetTile(CenterX, CenterY));
-				AssignRoute(Route);
+				PathFind.DrawRoute(Route);
 			}
 		}
 	}
-
-	public void AddEvent(string EventType, GameObject Executor, GameObject TargetObject)
+    public void AddEvent(string EventType, GameObject Executor, GameObject TargetObject)
     {
+		ClearUnit(Executor);
 		if(KeyTerm.MOVE_CMD == EventType)
 		{
 			if(Executor.transform.parent.GetComponent<Tile>().XCor == TargetObject.transform.parent.GetComponent<Tile>().XCor && Executor.transform.parent.GetComponent<Tile>().YCor == TargetObject.transform.parent.GetComponent<Tile>().YCor)
@@ -106,17 +114,8 @@ public class UI : MonoBehaviour
 			else
 			{
 				Executor.GetComponent<Unit>().MoveNeed = TargetObject.GetComponent<Tile>().MoveRequire;
-				Executor.GetComponent<Unit>().MoveRoute = AssignRoute(Route);
-				for (int i = 0; i < Executor.GetComponent<Unit>().MoveRoute.Length; i++)
-				{
-					if (null == Executor.GetComponent<Unit>().MoveRoute[i])
-					{
-						Executor.GetComponent<Unit>().Step = i - 2;
-						break;
-					}
-				}
+				Executor.GetComponent<Unit>().MoveRoute = PathFind.FlipRoute(PathFind.FindPath(Executor.transform.parent.gameObject, Executor.transform.parent.gameObject, TargetObject.transform.parent.gameObject));
 			}
-			
 		}
 		else if(KeyTerm.ATTACK_CMD == EventType)
 		{
@@ -155,34 +154,18 @@ public class UI : MonoBehaviour
 					}
 					Unit[i].GetComponent<Unit>().MovePoint = 0;
 				}
-				UpdateUnit();
+				UpdateUnit(); 
+				RemoveUnit();
 			} 		
-		}
-	}
-
-	public void ClearUnit(GameObject Unit)
-	{
-		Unit.GetComponent<SpriteRenderer>().color = Color.white;
-		Unit.GetComponent<Unit>().Action = KeyTerm.NONE;
-		Unit.GetComponent<Unit>().MoveNeed = 0;
-		Unit.GetComponent<Unit>().MoveRoute = new GameObject[Unit.GetComponent<Unit>().MoveRoute.Length];
-		Unit.GetComponent<Unit>().Step = 0;
-		Target[Unit.GetComponent<Unit>().UnitID] = null;
-	}
-	void UpdateUnit()
-	{
-		for(int i=0; i<Unit.Length; i++)
-		{
-			Unit[i].GetComponent<Unit>().ModifyUnit();
 		}
 	}
 	void SortUnit(int Start)
 	{
-		for(int i=Start; i<Unit.Length; i++)
+		for (int i = Start; i < Unit.Length; i++)
 		{
-			for(int e=i+1; e<Unit.Length; e++)
+			for (int e = i + 1; e < Unit.Length; e++)
 			{
-				if(Unit[i].GetComponent<Unit>().GetProperty(KeyTerm.SPEED) < Unit[e].GetComponent<Unit>().GetProperty(KeyTerm.SPEED))
+				if (Unit[i].GetComponent<Unit>().GetProperty(KeyTerm.SPEED) < Unit[e].GetComponent<Unit>().GetProperty(KeyTerm.SPEED))
 				{
 					GameObject temp = Unit[i];
 					Unit[i] = Unit[e];
@@ -193,9 +176,16 @@ public class UI : MonoBehaviour
 				}
 			}
 		}
-		for(int i=Start; i<Unit.Length; i++)
+		for (int i = Start; i < Unit.Length; i++)
 		{
 			Unit[i].GetComponent<Unit>().UnitID = i;
+		}
+	}
+	void UpdateUnit()
+	{
+		for(int i=0; i<Unit.Length; i++)
+		{
+			Unit[i].GetComponent<Unit>().ModifyUnit();
 		}
 	}
     void RemoveUnit()
@@ -206,7 +196,7 @@ public class UI : MonoBehaviour
     	{
     		if(Unit[i].GetComponent<Unit>().HitPoint<=0)
     		{
-				Unit[i].GetComponent<Unit>().Draw(Unit[i].GetComponent<Unit>().LineOfSight, KeyTerm.WARFOG_INDEX, 0,0,0, 0.5f);
+				Unit[i].GetComponent<Unit>().Draw(Unit[i].GetComponent<Unit>().LineOfSight, KeyTerm.SQUARE, KeyTerm.WARFOG_INDEX, 0,0,0, 0.5f);
     			Destroy(Unit[i]);
     			Target[i] = null;
     			tempUnit = new GameObject[Unit.Length - 1];
@@ -231,80 +221,104 @@ public class UI : MonoBehaviour
     		Target = tempTarget;
     	}
     }
-	
-    public void Cancel()
+	public void ClearUnit(GameObject Unit)
+	{
+		Unit.GetComponent<SpriteRenderer>().color = Color.white;
+		Unit.GetComponent<Unit>().Action = KeyTerm.NONE;
+		Unit.GetComponent<Unit>().MovePoint = 0;
+		Unit.GetComponent<Unit>().MoveNeed = 0;
+		PathFind.ClearRoute(Unit.GetComponent<Unit>().MoveRoute);
+		Unit.GetComponent<Unit>().MoveRoute = null;
+		Target[Unit.GetComponent<Unit>().UnitID] = null;
+	}
+
+	public void Cancel()
     {
-		ClearRoute();
 		OpenSideBar(false);
 		if(null != Selected)
 		{
-			Selected.GetComponent<Unit>().Draw(Selected.GetComponent<Unit>().LineOfSight+1, KeyTerm.OUTLINE_INDEX, 1, 1, 1, 0);
+			Selected.GetComponent<Unit>().Draw(Selected.GetComponent<Unit>().LineOfSight+1, KeyTerm.SQUARE, KeyTerm.OUTLINE_INDEX, 1, 1, 1, 0);
+			PathFind.ClearRoute(Selected.GetComponent<Unit>().MoveRoute);
 		}
-		
+		else
+        {
+			PathFind.ClearRoute(Route);
+		}
     	Selected = null;
-    	Move.SetActive(false);
-    	MoveMode = false;
-    	Attack.SetActive(false);
-    	AttackMode = false;
-    }
+		ToggleIcon(false);
+	}
+	public void ToggleIcon(bool Switch, GameObject Unit = null)
+	{
+		GameObject Icon = GameObject.Find("Icon");
+		if(Switch)
+        {
+			Move.SetActive(true);
+			Attack.SetActive(true);
+			Stop.SetActive(true);
+			Icon.transform.position = new Vector3(Unit.transform.parent.position.x, Unit.transform.parent.position.y, -3);
+			Icon.GetComponent<Animator>().SetBool("Play", true);
+		}
+		else
+        {
+			Move.SetActive(false);
+			MoveMode = false;
+			Attack.SetActive(false);
+			AttackMode = false;
+			Stop.SetActive(false);
+			Icon.GetComponent<Animator>().SetBool("Play", false);
+		}
+	}
 	public void OpenSideBar(bool Switch, GameObject Target = null)
     {
 		Camera = GameObject.Find("MainCamera");
         GameObject SideBar = GameObject.Find("SideBar");
-		GameObject PlaceHolder = GameObject.Find("PlaceHolder");
-		GameObject PlaceInfo = GameObject.Find("PlaceInfo");
-		if(Switch)
+		GameObject PlaceHolder = SideBar.transform.GetChild(0).gameObject;
+		GameObject PlaceInfo = SideBar.transform.GetChild(1).gameObject;
+		if (Switch)
 		{
-			SideBar.transform.position = new Vector3(Camera.transform.position.x-6,SideBar.transform.position.y,SideBar.transform.position.z);
-			int Extra = 0;
-			for(int i=0; i<Target.transform.parent.childCount; i++)
+			int OffSet = 2;
+			for(int i=2; i<Target.transform.parent.childCount; i++)
 			{
-				if(Target.transform.parent.GetChild(i).gameObject.name != KeyTerm.OUTLINE && Target.transform.parent.GetChild(i).gameObject.name != KeyTerm.WARFOG)
-				{
-					GameObject NewItem = Instantiate(PlaceHolder);
-					NewItem.transform.parent = SideBar.transform;
-					NewItem.transform.position = new Vector3(PlaceHolder.transform.position.x,PlaceHolder.transform.position.y+(i-Extra)*1.5f,-9);
-					NewItem.name = Target.transform.parent.GetChild(i).gameObject.name + " C";
-					NewItem.GetComponent<SpriteRenderer>().sprite = Target.transform.parent.GetChild(i).gameObject.GetComponent<SpriteRenderer>().sprite;
-					if(!AttackMode && NewItem.name == Target.name + " C")
-					{
-						NewItem.GetComponent<SpriteRenderer>().color = new Color(1, 1, 0, 1);
+				GameObject Object = Instantiate(PlaceHolder);
+				Object.transform.parent = SideBar.transform;
+				Object.transform.position = new Vector3(PlaceHolder.transform.position.x,PlaceHolder.transform.position.y+(i-OffSet) *1.5f,-9);
+				Object.name = Target.transform.parent.GetChild(i).gameObject.name + " C";
+				Object.GetComponent<SpriteRenderer>().sprite = Target.transform.parent.GetChild(i).gameObject.GetComponent<SpriteRenderer>().sprite;
+				Object.AddComponent<BoxCollider2D>();
+				if(null != Target.transform.parent.GetChild(i).GetComponent<Unit>())
+                {
+					Object.GetComponent<PlaceHolder>().ActualUnit = Target.transform.parent.GetChild(i).gameObject;
+					if(!AttackMode && PlayerTeam == Target.GetComponent<Unit>().Team && Target == Target.transform.parent.GetChild(i).gameObject)
+                    {
+						Object.GetComponent<SpriteRenderer>().color = new Color(1, 1, 0, 1);
 					}
-					NewItem.AddComponent<BoxCollider2D>();
-
-					NewItem = Instantiate(PlaceInfo);
-					NewItem.transform.parent = SideBar.transform;
-					NewItem.transform.position = new Vector3(PlaceInfo.transform.position.x,PlaceInfo.transform.position.y+(i-Extra)*1.5f,-9);
-					NewItem.name = Target.transform.parent.GetChild(i).gameObject.name + " I";
-					NewItem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
-					AddText(NewItem);
 				}
-				else
-				{
-					Extra++;
-				}
+				Object.SetActive(true);
+				GameObject Info = Instantiate(PlaceInfo);
+				Info.transform.parent = SideBar.transform;
+				Info.transform.position = new Vector3(PlaceInfo.transform.position.x,PlaceInfo.transform.position.y+(i-OffSet) *1.5f,-9);
+				Info.name = Target.transform.parent.GetChild(i).gameObject.name + " I";
+				Info.transform.localScale = new Vector3(0.5f, 0.5f, 1);
+				AddText(Info.GetComponent<TextMesh>(), Object.GetComponent<PlaceHolder>().ActualUnit);
+				Info.SetActive(true);
 			}
-			PlaceHolder.SetActive(false);
-			PlaceInfo.SetActive(false);
+			Camera.GetComponent<Animator>().SetBool("Open", true);
 		}
         else
 		{
-			SideBar.transform.position = new Vector3(Camera.transform.position.x-14,SideBar.transform.position.y,SideBar.transform.position.z);
+			Camera.GetComponent<Animator>().SetBool("Open", false);
 			for(int i=2; i<SideBar.transform.childCount; i++)
 			{
 				Destroy(SideBar.transform.GetChild(i).gameObject);
 			}
-			SideBar.transform.GetChild(0).gameObject.SetActive(true);
-			SideBar.transform.GetChild(1).gameObject.SetActive(true);
 		}
     }
-	void AddText(GameObject Target)
+	void AddText(TextMesh Text, GameObject Unit)
 	{
-		GameObject ActualObject = GameObject.Find(Target.name.Split(' ')[0]);
-		if(null == ActualObject.GetComponent<Tile>())
+		if(null != Unit)
 		{
-			Unit UnitInfo = ActualObject.GetComponent<Unit>();
-			Target.GetComponent<TextMesh>().text = 
+			Unit UnitInfo = Unit.GetComponent<Unit>();
+			Text.text = 
 			"HP: " + UnitInfo.HitPoint.ToString("F0") + "  " + 
 			"ATK: " + UnitInfo.GetProperty(KeyTerm.ATTACK).ToString("F0") + "  " + 
 			"DEF: " + UnitInfo.GetProperty(KeyTerm.DEFENCE).ToString("F0") + "\n" +
@@ -315,7 +329,7 @@ public class UI : MonoBehaviour
 		}
 		else
 		{
-			Target.GetComponent<TextMesh>().text = "Tile";
+			Text.text = "Tile";
 		}
 	}
 
@@ -325,34 +339,63 @@ public class UI : MonoBehaviour
 		{
 			if(Unit[i].GetComponent<Unit>().Team == PlayerTeam)
 			{
-				Unit[i].GetComponent<Unit>().Draw(Unit[i].GetComponent<Unit>().LineOfSight, KeyTerm.WARFOG_INDEX, 0, 0, 0, 0);
+				Unit[i].GetComponent<Unit>().Draw(Unit[i].GetComponent<Unit>().LineOfSight, KeyTerm.SQUARE, KeyTerm.WARFOG_INDEX, 0, 0, 0, 0);
 			}
-			else
+		}
+		for(int i=0; i<Unit.Length; i++)
+		{
+			if(Unit[i].GetComponent<Unit>().Team != PlayerTeam)
 			{
-				for(int e=0; e<Unit[i].transform.parent.childCount; e++)
+				if (Unit[i].transform.parent.GetChild(KeyTerm.WARFOG_INDEX).gameObject.GetComponent<SpriteRenderer>().color == new Color(0, 0, 0, 0))
 				{
-					if(KeyTerm.WARFOG == Unit[i].transform.parent.GetChild(e).gameObject.name)
-					{
-						if(Unit[i].transform.parent.GetChild(e).gameObject.GetComponent<SpriteRenderer>().color == new Color(0,0,0,0))
-						{
-							Unit[i].SetActive(true);
-							//Unit[i].GetComponent<SpriteRenderer>().color = new Color(1,1,1,1);
-							
-						}
-						else
-						{
-							Unit[i].SetActive(false);
-							//Unit[i].GetComponent<SpriteRenderer>().color = new Color(1,1,1,0);
-						}
-					}
+					Unit[i].SetActive(true);
+				}
+				else
+				{
+					Unit[i].SetActive(false);
+				}
+			}
+		}
+	}
+	public void CenterCamera(GameObject Target)
+    {
+		int TargetX = Target.GetComponent<Tile>().XCor;
+		int TargetY = Target.GetComponent<Tile>().YCor;
+		if(CenterX - TargetX > 1)
+        {
+			Camera.transform.position = new Vector3(Target.transform.position.x + 1, Camera.transform.position.y, -10);
+        }
+		else if(TargetX - CenterX > 7)
+        {
+			Camera.transform.position = new Vector3(Target.transform.position.x - 7, Camera.transform.position.y, -10);
+		}
+		if(TargetY - CenterY < -3)
+        {
+			Camera.transform.position = new Vector3(Camera.transform.position.x, Target.transform.position.y - 3, -10);
+		}
+		else if(CenterY - TargetY < -3)
+		{
+			Camera.transform.position = new Vector3(Camera.transform.position.x, Target.transform.position.y + 3, -10);
+		}
+		if(Physics.Raycast(Camera.transform.position, Vector3.forward, out Hit, 11))
+		{
+			CenterX = Hit.transform.parent.GetComponent<Tile>().XCor;
+			CenterY = Hit.transform.parent.GetComponent<Tile>().YCor;
+		}
+		for(int i = 0; i < LoadSizeX * 2; i++)
+		{
+			for(int e = 0; e < LoadSizeY * 2; e++)
+			{
+				GameObject Tile = Tool.GetTile(CenterX - i + LoadSizeX, CenterY - e + LoadSizeY);
+				if(null != Tile)
+				{
+					Tile.SetActive(true);
 				}
 			}
 		}
 	}
 	void DragScreen()
     {
-		Camera = GameObject.Find("MainCamera");
-		
     	if(!Check)
     	{
     		CurrentPosition = Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition);
@@ -367,8 +410,6 @@ public class UI : MonoBehaviour
     }
 	void DispalyScreen()
 	{
-		Camera = GameObject.Find("MainCamera");
-		
 		if(Physics.Raycast(Camera.transform.position, Vector3.forward, out Hit, 11))
 		{
 			CenterX = Hit.transform.parent.GetComponent<Tile>().XCor;
@@ -376,7 +417,7 @@ public class UI : MonoBehaviour
 		}
 		else
 		{
-			CenterX = 10;
+			CenterX = 12;
 			CenterY = 6;
 			GameObject StartTile = Tool.GetTile(CenterX, CenterY);
 			Camera.transform.position = new Vector3(StartTile.transform.position.x, StartTile.transform.position.y, -10);
@@ -467,36 +508,4 @@ public class UI : MonoBehaviour
 			}
 		}
 	}
-
-
-	public GameObject[] AssignRoute(FindTile Route, GameObject[] Path = null, int Count = 0)
-	{
-		if (null == Path)
-		{
-			Path = new GameObject[LoadSizeX * LoadSizeY];
-		}
-		if (null != Route.Previous)
-		{
-			Path[Count] = Route.Tile;
-			Count++;
-			Route.Tile.transform.GetChild(0).GetComponent<SpriteRenderer>().color = new Color(0, 0, 1, 1);
-			AssignRoute(Route.Previous, Path, Count++);
-		}
-		return Path;
-	}
-	public void ClearRoute()
-	{
-		for (int i = CenterX - LoadSizeX; i < CenterX + LoadSizeX; i++)
-		{
-			for (int e = CenterY - LoadSizeY; e < CenterY + LoadSizeY; e++)
-			{
-				if (null != Tool.GetTile(i, e))
-				{
-					Tool.GetTile(i, e).transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(0, 0, 0, 0);
-				}
-
-			}
-		}
-	}
 }
-

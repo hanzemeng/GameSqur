@@ -1,19 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using UnityEditor;
 using UnityEngine;
-
-using static KeyTerm;
-using static Message;
-using static Weapon;
-using static Armor;
 
 public class Unit : MonoBehaviour
 {
+	Texture2D HoverCursor;
 	UI UI;
 	public int UnitID;
 	public string Team;
-	int UnitXCor;
-	int UnitYCor;
 	Tile LandModifier;
 	Tile TerrainModifier;
 	public float MovePoint;
@@ -30,11 +23,12 @@ public class Unit : MonoBehaviour
 	public string AttackRangeType;
 	public string Action;
 
-	public GameObject[] MoveRoute;
-	public int Step;
+	public int DetectRange;
+	public FindTile MoveRoute;
 
 	public void InitializeUnit()
 	{
+		UI = GameObject.Find("UI").GetComponent<UI>();
 		AttackType = new float[8];
 		DefenceType = new float[8];
 		MovePoint = 0;
@@ -42,13 +36,11 @@ public class Unit : MonoBehaviour
 		InitialSpeed = 200;
 		LineOfSight = 2;
 		Action = KeyTerm.NONE;
-		Step = 0;
+
+		DetectRange = 3;
 	}
     public void ModifyUnit()
     {
-		UI = GameObject.Find("UI").GetComponent<UI>();
-		UnitXCor = transform.parent.GetComponent<Tile>().XCor;
-		UnitYCor = transform.parent.GetComponent<Tile>().YCor;
 		if(transform.parent.childCount > KeyTerm.LAND_INDEX && KeyTerm.LAND == transform.parent.GetChild(KeyTerm.LAND_INDEX).gameObject.name)
 		{
 			LandModifier = transform.parent.GetChild(KeyTerm.LAND_INDEX).gameObject.GetComponent<Tile>();
@@ -93,30 +85,30 @@ public class Unit : MonoBehaviour
 			return 2.33f;
 		}
 	}
+    public void OnSelecte()
+    {
+		UI.ToggleIcon(true, gameObject);
+		UI.PathFind.DrawRoute(MoveRoute);
+	}
 
-	public void MoveTo(GameObject Target)
+    public void MoveTo(GameObject Target)
 	{
-		UI = GameObject.Find("UI").GetComponent<UI>();
-		
-		GameObject NextStep = MoveRoute[Step];
-		Step--;
-		Draw(LineOfSight, KeyTerm.WARFOG_INDEX, 0, 0, 0, 0.5f);
-    	transform.parent = NextStep.transform;
-	    transform.position = new Vector3(NextStep.transform.position.x, NextStep.transform.position.y,-2);
+		if(null != MoveRoute.Previous)
+        {
+			MoveRoute = MoveRoute.Previous;
+			Draw(LineOfSight, KeyTerm.SQUARE, KeyTerm.WARFOG_INDEX, 0, 0, 0, 0.5f);
+			transform.parent = MoveRoute.Tile.transform;
+			transform.position = new Vector3(MoveRoute.Tile.transform.position.x, MoveRoute.Tile.transform.position.y, -2);
+		}
 		if(transform.parent == Target.transform.parent)
 		{
 			UI.ClearUnit(gameObject);
 		}
-		else
-		{
-			Action = KeyTerm.MOVE_CMD;
-		}
 	}
 	public void AttackUnit(GameObject Target)
 	{
-		UI = GameObject.Find("UI").GetComponent<UI>();
 		bool InRange = true;
-		if(Target.activeSelf)
+		if(null != Target)
 		{
 			if(KeyTerm.SQUARE == AttackRangeType)
 			{
@@ -135,6 +127,7 @@ public class Unit : MonoBehaviour
 		}
 		else
 		{
+			Debug.Log(Message.UNIT_DNE);
 			InRange = false;
 		}
 		if(InRange)
@@ -154,36 +147,30 @@ public class Unit : MonoBehaviour
 			Debug.Log(Message.OUT_OF_RANGE);
 		}
 		UI.ClearUnit(gameObject);
-
 	}
-	public void Draw(int Size, int Type, float R, float G, float B, float transparency, string Shape = "Square")
+
+	public void Draw(int Size, string Shape, int Type, float R, float G, float B, float transparency)
 	{
-		UI = GameObject.Find("UI").GetComponent<UI>();
-		
-		for(int i=0; i<Size*2+1; i++)
-		{
-			for(int e=0; e<Size*2+1; e++)
-			{
-				GameObject CurrentTile = UI.Tool.GetTile(UnitXCor-Size+i, UnitYCor-Size+e);
-				if(null != CurrentTile)
-				{
-					if(KeyTerm.RHOMBUS == Shape)
-					{
-						if(UI.Tool.GetDistance(transform.parent.gameObject, CurrentTile) > Size)
-						{
-							CurrentTile = transform.parent.gameObject;
-						}
-					}
-					CurrentTile.SetActive(true);
-					CurrentTile.transform.GetChild(Type).GetComponent<SpriteRenderer>().color = new Color(R, G, B, transparency);
-				}			
+		GameObject[] AllTile = UI.Tool.GetSurroundTile(gameObject.transform.parent.gameObject, Size, Shape);
+		for(int i=0; i<AllTile.Length; i++)
+        {
+			if(null != AllTile[i])
+            {
+				AllTile[i].SetActive(true);
+				AllTile[i].transform.GetChild(Type).GetComponent<SpriteRenderer>().color = new Color(R, G, B, transparency);
 			}
 		}
 	}
-    void OnMouseDown()
+	void OnMouseEnter()
+	{
+		Cursor.SetCursor(CursorImage.HoverCursor, Vector2.zero, CursorMode.ForceSoftware);
+	}
+	void OnMouseExit()
+	{
+		Cursor.SetCursor(null, Vector2.zero, CursorMode.ForceSoftware);
+	}
+	void OnMouseDown()
     {
-		
-		UI = GameObject.Find("UI").GetComponent<UI>();
 		if(UI.AttackMode)
 		{
 			int temp = 0;
@@ -213,12 +200,10 @@ public class Unit : MonoBehaviour
 			UI.OpenSideBar(false);
 			UI.Selected = gameObject;
 			UI.OpenSideBar(true, UI.Selected);
-			if(Team == UI.PlayerTeam)
+			UI.CenterCamera(gameObject.transform.parent.gameObject);
+			if (Team == UI.PlayerTeam)
 			{
-				UI.Move.SetActive(true);
-				UI.Move.transform.position = new Vector3(transform.parent.position.x+1, transform.parent.position.y-1,-3);
-				UI.Attack.SetActive(true);
-				UI.Attack.transform.position = new Vector3(transform.parent.position.x+1, transform.parent.position.y+1,-3);
+				OnSelecte();
 			}
 			else
 			{
@@ -226,12 +211,4 @@ public class Unit : MonoBehaviour
 			}
 		}
     }
-	
-	public void DisplayArray(float[] Array)
-	{
-		for(int i=0; i<Array.Length; i++)
-		{
-			Debug.Log(Array[i]);
-		}
-	}
 }

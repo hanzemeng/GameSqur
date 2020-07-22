@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class Fox : Unit
+﻿public class Fox : Unit
 {
     void Awake()
     {

@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class Bear : Unit
+﻿public class Bear : Unit
 {
     void Awake()
     {
