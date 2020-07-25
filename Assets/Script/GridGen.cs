@@ -5,45 +5,29 @@ using System.Runtime.Serialization.Formatters.Binary;
 public class GridGen : MonoBehaviour
 {
 	public int TotalUnit;
-	GameObject[][] tempMap;
-	int MapRow;
-	int MapColumn;
+	public GameObject[][] tempMap;
+	public int MapRow;
+	public int MapColumn;
     void Awake()
     {
 		TotalUnit = 0;
-    	DrawSqur(true);
+		ObjectReference.Initialize();
+		DrawSqur(true);
 
 		//MapEdit();
 		//SaveMap("/3.SQR");
-		InitializeUI();
+		InitializeClass();
 		
-		Destroy(GameObject.Find("Initialize"));
+		Destroy(gameObject);
     }
 	
-    void InitializeUI()
+    void InitializeClass()
     {
-		UI UI = GameObject.Find("UI").GetComponent<UI>();
-
-		Tool Tool = new Tool();
-		Tool.MapSizeX = MapRow;
-		Tool.MapSizeY = MapColumn;
-		Tool.Map = tempMap;
-		UI.Tool = Tool;
-
-		PathFinding PathFind = new PathFinding();
-		PathFind.UI = UI;
-		PathFind.OpenList = new FindTile[MapRow * MapColumn];
-		PathFind.CloseList = new FindTile[MapRow * MapColumn];
-		PathFind.CloseCount = 0;
-		PathFind.OpenCount = 0;
-		UI.PathFind = PathFind;
-
-		AI AI = new AI();
-		AI.UI = UI;
-		UI.AI = AI;
-
-		UI.Unit = new GameObject[TotalUnit];
-		UI.Target = new GameObject[TotalUnit];
+		ObjectReference.UI.Unit = new GameObject[TotalUnit];
+		ObjectReference.UI.Target = new GameObject[TotalUnit];
+		Tool.Initialize();
+		PathFinding.Initialize();
+        AI.Initialize();
 	}
 	void MapEdit()
     {
@@ -77,7 +61,7 @@ public class GridGen : MonoBehaviour
 		if(LoadPath)
 		{
 			BinaryFormatter Formatter = new BinaryFormatter();
-			string Path = FolderPath.MapPath + "/Choose.SQR";
+			string Path = ResourceFile.MapPath + "/Choose.SQR";
 			FileStream Stream = new FileStream(Path, FileMode.Open);
 			string MapPath = Formatter.Deserialize(Stream) as string;
 			Stream.Close();
@@ -87,13 +71,11 @@ public class GridGen : MonoBehaviour
 		}
 		else
         {
-			MapRow = 50;
-			MapColumn = 50;
+			MapRow = RowCount;
+			MapColumn = ColumnCount;
 		}
 
 		tempMap = new GameObject[MapRow][];
-		GameObject StartLoc = GameObject.Find("StartLoc");
-    	GameObject Map = GameObject.Find("Map");
 		int Count = 0;
 		
     	for(int i=0; i< MapRow; i++)
@@ -101,10 +83,10 @@ public class GridGen : MonoBehaviour
 			GameObject[] tempColum = new GameObject[MapColumn];
     		for(int e=0; e< MapColumn; e++)
     		{
-    			GameObject CurrentTile = Instantiate(StartLoc);
+    			GameObject CurrentTile = Instantiate(ObjectReference.StartLoc);
 				tempColum[e] = CurrentTile;
-    			CurrentTile.transform.parent = Map.transform;
-        		CurrentTile.transform.position = new Vector2(StartLoc.transform.position.x+i,StartLoc.transform.position.y-e);
+    			CurrentTile.transform.parent = ObjectReference.Map.transform;
+        		CurrentTile.transform.position = new Vector2(ObjectReference.StartLoc.transform.position.x+i, ObjectReference.StartLoc.transform.position.y-e);
         		CurrentTile.name = i.ToString() + ", " + e.ToString() + " T";
         		CurrentTile.AddComponent<Tile>();
 				CurrentTile.GetComponent<Tile>().XCor = i;
@@ -153,16 +135,10 @@ public class GridGen : MonoBehaviour
 		TerrainOption[2] = "Hole";
 		TerrainChance[2] = 1;
 		Terrain = ChooseOption(TerrainOption, TerrainChance);
-		
-		
-		EditTile(Target.name, Land, Terrain);
+
+		Target.GetComponent<Tile>().Land = Land;
+		Target.GetComponent<Tile>().Terrain = Terrain;
 	}
-    void EditTile(string Target, string Land, string Terrain)
-    {
-		Tile CurrentTile = GameObject.Find(Target).GetComponent<Tile>();
-		CurrentTile.Land = Land;
-		CurrentTile.Terrain = Terrain;
-    }
 	void AddUnit(string Unit, string Team = "Blue", int XCor = -1, int YCor = -1)
 	{
 		Tile CurrentTile;
@@ -203,7 +179,7 @@ public class GridGen : MonoBehaviour
 	void SaveMap(string Name)
 	{
 		BinaryFormatter Formatter = new BinaryFormatter();
-		string SavePath = FolderPath.MapPath + Name;
+		string SavePath = ResourceFile.MapPath + Name;
 		TileInfo Data = new TileInfo();
 		Data.MapRow = MapRow;
 		Data.MapColumn = MapColumn;
@@ -232,7 +208,7 @@ public class GridGen : MonoBehaviour
 	TileInfo LoadMap(string Path)
 	{
 		BinaryFormatter Formatter = new BinaryFormatter();
-		string LoadPath = FolderPath.MapPath + Path;
+		string LoadPath = ResourceFile.MapPath + Path;
 		FileStream Stream = new FileStream(LoadPath, FileMode.Open);
 		TileInfo Data = Formatter.Deserialize(Stream) as TileInfo;
 		Stream.Close();

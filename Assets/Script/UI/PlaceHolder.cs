@@ -5,7 +5,7 @@ public class PlaceHolder : MonoBehaviour
     public GameObject ActualUnit;
     void OnMouseEnter()
     {
-        Cursor.SetCursor(CursorImage.HoverCursor, Vector2.zero, CursorMode.ForceSoftware);
+        Cursor.SetCursor(ResourceFile.HoverCursor, Vector2.zero, CursorMode.ForceSoftware);
     }
     void OnMouseExit()
     {
@@ -24,7 +24,7 @@ public class PlaceHolder : MonoBehaviour
         {
             if(null != UI.Selected)
             {
-                UI.PathFind.ClearRoute(UI.Selected.GetComponent<Unit>().MoveRoute);
+                PathFinding.ClearRoute(UI.Selected.GetComponent<Unit>().MoveRoute);
             }
             UI.Selected = ActualUnit;
             UI.Selected.GetComponent<Unit>().OnSelecte();

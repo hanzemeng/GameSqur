@@ -4,7 +4,8 @@ public class Hint : MonoBehaviour
 {
     void Start()
     {
-        GetComponent<TextMesh>().text = "Drag the CONTENTS of the Map folder into:\n" + FolderPath.MapPath;
+        ResourceFile.Initialize();
+        GetComponent<TextMesh>().text = "Maps store in:\n" + ResourceFile.MapPath;
     }
     void Update()
     {
@@ -14,7 +15,9 @@ public class Hint : MonoBehaviour
         }
     }
 }
+/*
 public class FolderPath
 {
     public static string MapPath = Application.dataPath + "/Map";
 }
+*/

@@ -7,7 +7,7 @@ public class Move : MonoBehaviour
 		UI UI = GameObject.Find("UI").GetComponent<UI>();
         UI.ToggleIcon(false);
         UI.OpenSideBar(false);
-        UI.PathFind.ClearRoute(UI.Selected.GetComponent<Unit>().MoveRoute);
+        PathFinding.ClearRoute(UI.Selected.GetComponent<Unit>().MoveRoute);
         UI.MoveMode = true;
     }
 }

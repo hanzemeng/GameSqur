@@ -10,7 +10,7 @@ public class Level : MonoBehaviour
 
     void OnMouseEnter()
     {
-        Cursor.SetCursor(CursorImage.HoverCursor, Vector2.zero, CursorMode.ForceSoftware);
+        Cursor.SetCursor(ResourceFile.HoverCursor, Vector2.zero, CursorMode.ForceSoftware);
     }
     void OnMouseExit()
     {
@@ -18,8 +18,9 @@ public class Level : MonoBehaviour
     }
     void OnMouseDown()
     {
+        
         BinaryFormatter Formatter = new BinaryFormatter();
-        string SavePath = FolderPath.MapPath + "/Choose.SQR";
+        string SavePath = ResourceFile.MapPath + "/Choose.SQR";
         FileStream Stream = new FileStream(SavePath, FileMode.Create);
         Formatter.Serialize(Stream, LevelPath);
         Stream.Close();

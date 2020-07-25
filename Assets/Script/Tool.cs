@@ -2,10 +2,18 @@
 
 public class Tool
 {
-	public int MapSizeX;
-	public int MapSizeY;
-	public GameObject[][] Map;
-	public GameObject GetTile(int XCor, int YCor)
+	static int MapSizeX;
+	static int MapSizeY;
+	static GameObject[][] Map;
+	public static void Initialize()
+	{
+		GridGen StartInfo = GameObject.Find("Initialize").GetComponent<GridGen>();
+		MapSizeX = StartInfo.MapRow;
+		MapSizeY = StartInfo.MapColumn;
+		Map = StartInfo.tempMap;
+
+	}
+	public static GameObject GetTile(int XCor, int YCor)
 	{
 		if (-1 < XCor && -1 < YCor)
 		{
@@ -16,7 +24,7 @@ public class Tool
 		}
 		return null;
 	}
-	public GameObject[] GetSurroundTile(GameObject Origin, int Size, string Shape)
+	public static GameObject[] GetSurroundTile(GameObject Origin, int Size, string Shape)
     {
 		GameObject[] Tile = new GameObject[(2*Size+1)*(2*Size+1)];
 		int CenterX = Origin.GetComponent<Tile>().XCor;
@@ -44,7 +52,7 @@ public class Tool
 		}
 		return Tile;
     }
-	public float GetDistance(GameObject Start, GameObject Finish)
+	public static float GetDistance(GameObject Start, GameObject Finish)
 	{
 		if (null == Start || null == Finish)
 		{

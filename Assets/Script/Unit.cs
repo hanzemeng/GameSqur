@@ -3,8 +3,6 @@ using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
-	Texture2D HoverCursor;
-	UI UI;
 	public int UnitID;
 	public string Team;
 	Tile LandModifier;
@@ -28,7 +26,6 @@ public class Unit : MonoBehaviour
 
 	public void InitializeUnit()
 	{
-		UI = GameObject.Find("UI").GetComponent<UI>();
 		AttackType = new float[8];
 		DefenceType = new float[8];
 		MovePoint = 0;
@@ -87,8 +84,8 @@ public class Unit : MonoBehaviour
 	}
     public void OnSelecte()
     {
-		UI.ToggleIcon(true, gameObject);
-		UI.PathFind.DrawRoute(MoveRoute);
+		ObjectReference.UI.ToggleIcon(true, gameObject);
+		PathFinding.DrawRoute(MoveRoute);
 	}
 
     public void MoveTo(GameObject Target)
@@ -102,7 +99,7 @@ public class Unit : MonoBehaviour
 		}
 		if(transform.parent == Target.transform.parent)
 		{
-			UI.ClearUnit(gameObject);
+			ObjectReference.UI.ClearUnit(gameObject);
 		}
 	}
 	public void AttackUnit(GameObject Target)
@@ -112,14 +109,14 @@ public class Unit : MonoBehaviour
 		{
 			if(KeyTerm.SQUARE == AttackRangeType)
 			{
-				if(UI.Tool.GetDistance(transform.parent.gameObject, Target.transform.parent.gameObject) > AttackRange*Mathf.Sqrt(2))
+				if(Tool.GetDistance(transform.parent.gameObject, Target.transform.parent.gameObject) > AttackRange*Mathf.Sqrt(2))
 				{
 					InRange = false;
 				}
 			}
 			else if(KeyTerm.RHOMBUS == AttackRangeType)
 			{
-				if(UI.Tool.GetDistance(transform.parent.gameObject, Target.transform.parent.gameObject) > AttackRange)
+				if(Tool.GetDistance(transform.parent.gameObject, Target.transform.parent.gameObject) > AttackRange)
 				{
 					InRange = false;
 				}
@@ -146,12 +143,12 @@ public class Unit : MonoBehaviour
 		{
 			Debug.Log(Message.OUT_OF_RANGE);
 		}
-		UI.ClearUnit(gameObject);
+		ObjectReference.UI.ClearUnit(gameObject);
 	}
 
 	public void Draw(int Size, string Shape, int Type, float R, float G, float B, float transparency)
 	{
-		GameObject[] AllTile = UI.Tool.GetSurroundTile(gameObject.transform.parent.gameObject, Size, Shape);
+		GameObject[] AllTile = Tool.GetSurroundTile(gameObject.transform.parent.gameObject, Size, Shape);
 		for(int i=0; i<AllTile.Length; i++)
         {
 			if(null != AllTile[i])
@@ -163,7 +160,7 @@ public class Unit : MonoBehaviour
 	}
 	void OnMouseEnter()
 	{
-		Cursor.SetCursor(CursorImage.HoverCursor, Vector2.zero, CursorMode.ForceSoftware);
+		Cursor.SetCursor(ResourceFile.HoverCursor, Vector2.zero, CursorMode.ForceSoftware);
 	}
 	void OnMouseExit()
 	{
@@ -171,7 +168,7 @@ public class Unit : MonoBehaviour
 	}
 	void OnMouseDown()
     {
-		if(UI.AttackMode)
+		if(ObjectReference.UI.AttackMode)
 		{
 			int temp = 0;
 			for(int i=0; i<gameObject.transform.parent.childCount; i++)
@@ -183,25 +180,25 @@ public class Unit : MonoBehaviour
 			}
 			if(temp>1)
 			{
-				UI.OpenSideBar(true, gameObject);
+				ObjectReference.UI.OpenSideBar(true, gameObject);
 			}
 			else
 			{
-				UI.AddEvent(KeyTerm.ATTACK_CMD, UI.Selected, gameObject);
-				UI.Cancel();
+				ObjectReference.UI.AddEvent(KeyTerm.ATTACK_CMD, ObjectReference.UI.Selected, gameObject);
+				ObjectReference.UI.Cancel();
 			}
 		}
-		else if(UI.Destination)
+		else if(ObjectReference.UI.Destination)
 		{
-			UI.Destination = false;
+			ObjectReference.UI.Destination = false;
 		}
 		else
 		{
-			UI.OpenSideBar(false);
-			UI.Selected = gameObject;
-			UI.OpenSideBar(true, UI.Selected);
-			UI.CenterCamera(gameObject.transform.parent.gameObject);
-			if (Team == UI.PlayerTeam)
+			ObjectReference.UI.OpenSideBar(false);
+			ObjectReference.UI.Selected = gameObject;
+			ObjectReference.UI.OpenSideBar(true, ObjectReference.UI.Selected);
+			ObjectReference.UI.CenterCamera(gameObject.transform.parent.gameObject);
+			if (Team == ObjectReference.UI.PlayerTeam)
 			{
 				OnSelecte();
 			}

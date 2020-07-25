@@ -35,30 +35,6 @@ public class Tile : MonoBehaviour
             DefenceTypeModifier[i] = 1f;
         }
 	}
-	public float GetProperty(string Layer, string Property) //Layer means either Land or Terrain
-	{
-		Tile Selected = null;
-		for(int i=0; i<transform.transform.childCount; i++)
-		{
-			if(Layer== transform.GetChild(i).gameObject.name)
-			{
-				Selected = transform.GetChild(i).gameObject.GetComponent<Tile>();
-			}
-			else if(Layer == transform.GetChild(i).gameObject.name)
-			{
-				Selected = transform.GetChild(i).gameObject.GetComponent<Tile>();
-			}
-		}
-		if(null == Selected)
-		{
-			return 1;
-		}
-		if(KeyTerm.SPEED_MODIFIER == Property)
-		{
-			return Selected.SpeedModifier;
-		}
-		return 1;
-	}
     void DrawMap()
     {
 		UI UI = GameObject.Find("UI").GetComponent<UI>();

@@ -2,8 +2,12 @@
 
 public class AI
 {
-	public UI UI;
-	public void AIMove()
+	static UI UI = null;
+	public static void Initialize()
+    {
+		UI = GameObject.Find("UI").GetComponent<UI>();
+	}
+	public static void AIMove()
 	{
 		for(int i = 0; i < UI.Unit.Length; i++)
 		{
@@ -46,9 +50,9 @@ public class AI
 			}
 		}
 	}
-	GameObject CheckEnemy(GameObject Unit, int Size, string Shape)
+	static GameObject CheckEnemy(GameObject Unit, int Size, string Shape)
 	{
-		GameObject[] AllTile = UI.Tool.GetSurroundTile(Unit.transform.parent.gameObject, Size, Shape);
+		GameObject[] AllTile = Tool.GetSurroundTile(Unit.transform.parent.gameObject, Size, Shape);
 		for(int i = 0; i < AllTile.Length; i++)
 		{
 			if(null != AllTile[i])

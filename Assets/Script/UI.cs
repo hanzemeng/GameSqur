@@ -4,13 +4,10 @@ using UnityEngine.SceneManagement;
 
 public class UI : MonoBehaviour
 {
-	public Tool Tool;
-	public PathFinding PathFind;
 	FindTile Route;
-	public AI AI;
 
 	public string PlayerTeam;
-	public int CurrentTurn;
+	
 	public GameObject[] Unit;
 	public GameObject[] Target;
 	public GameObject Selected;
@@ -21,7 +18,7 @@ public class UI : MonoBehaviour
 	public bool AttackMode;
 	public GameObject Stop;
 
-	GameObject Camera;
+	int CurrentTurn;
 	Vector3 CurrentPosition;
 	Vector3 NewPosition;
 	bool Check;
@@ -30,11 +27,11 @@ public class UI : MonoBehaviour
 	int CenterY;
 	int LoadSizeX;
 	int LoadSizeY;
+	int UnitCycle;
 	
 	void Start()
 	{
 		Cursor.SetCursor(null, Vector2.zero, CursorMode.ForceSoftware);
-		Camera = GameObject.Find("MainCamera");
 		PlayerTeam = KeyTerm.BLUE;
 		CurrentTurn = 1;
 		Move = GameObject.Find(KeyTerm.MOVE_CMD);
@@ -43,6 +40,7 @@ public class UI : MonoBehaviour
 		LoadSizeX = 10;
 		LoadSizeY = 6;
 		Check = false;
+		UnitCycle = 0;
 		UpdateUnit();
 		SortUnit(0);
 		OpenSideBar(false);
@@ -59,7 +57,7 @@ public class UI : MonoBehaviour
 
 		if(Input.GetMouseButton(1))
         {
-			Cursor.SetCursor(CursorImage.DragCursor, Vector2.zero, CursorMode.ForceSoftware);
+			Cursor.SetCursor(ResourceFile.DragCursor, Vector2.zero, CursorMode.ForceSoftware);
 			DragScreen();
         }
 		else if(Input.GetMouseButtonUp(1))
@@ -79,25 +77,28 @@ public class UI : MonoBehaviour
 			Cursor.SetCursor(null, Vector2.zero, CursorMode.ForceSoftware);
 			Check = false;
         }
-        if(Input.GetKeyDown("e"))
-        {
-			
+		if(Input.GetKeyDown("e"))
+		{
 			Cancel();
-        	CurrentTurn++;
-        	GameObject.Find("TurnCount").GetComponent<TextMesh>().text = CurrentTurn.ToString();
+			CurrentTurn++;
+			GameObject.Find("TurnCount").GetComponent<TextMesh>().text = CurrentTurn.ToString();
 			UpdateEvent();
 			UpdateFog();
 			AI.AIMove();
 		}
+		else if(Input.GetKeyDown("q"))
+		{
+			FindUnit();
+		}
 		if(MoveMode)
 		{
-			PathFind.ClearRoute(Route);
-			if (Physics.Raycast(Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition), Vector3.forward, out Hit, 11))
+			PathFinding.ClearRoute(Route);
+			if (Physics.Raycast(ObjectReference.Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition), Vector3.forward, out Hit, 11))
 			{
-				CenterX = Hit.transform.parent.GetComponent<Tile>().XCor;
-				CenterY = Hit.transform.parent.GetComponent<Tile>().YCor;
-				Route = PathFind.FindPath(Selected.transform.parent.gameObject, Selected.transform.parent.gameObject, Tool.GetTile(CenterX, CenterY));
-				PathFind.DrawRoute(Route);
+				int MouseX = Hit.transform.parent.GetComponent<Tile>().XCor;
+				int MouseY = Hit.transform.parent.GetComponent<Tile>().YCor;
+				Route = PathFinding.FindPath(Selected.transform.parent.gameObject, Selected.transform.parent.gameObject, Tool.GetTile(MouseX, MouseY));
+				PathFinding.DrawRoute(Route);
 			}
 		}
 	}
@@ -114,7 +115,7 @@ public class UI : MonoBehaviour
 			else
 			{
 				Executor.GetComponent<Unit>().MoveNeed = TargetObject.GetComponent<Tile>().MoveRequire;
-				Executor.GetComponent<Unit>().MoveRoute = PathFind.FlipRoute(PathFind.FindPath(Executor.transform.parent.gameObject, Executor.transform.parent.gameObject, TargetObject.transform.parent.gameObject));
+				Executor.GetComponent<Unit>().MoveRoute = PathFinding.FlipRoute(PathFinding.FindPath(Executor.transform.parent.gameObject, Executor.transform.parent.gameObject, TargetObject.transform.parent.gameObject));
 			}
 		}
 		else if(KeyTerm.ATTACK_CMD == EventType)
@@ -227,9 +228,32 @@ public class UI : MonoBehaviour
 		Unit.GetComponent<Unit>().Action = KeyTerm.NONE;
 		Unit.GetComponent<Unit>().MovePoint = 0;
 		Unit.GetComponent<Unit>().MoveNeed = 0;
-		PathFind.ClearRoute(Unit.GetComponent<Unit>().MoveRoute);
+		PathFinding.ClearRoute(Unit.GetComponent<Unit>().MoveRoute);
 		Unit.GetComponent<Unit>().MoveRoute = null;
 		Target[Unit.GetComponent<Unit>().UnitID] = null;
+	}
+	void FindUnit()
+	{
+		if(UnitCycle < Unit.Length)
+		{
+			if(PlayerTeam != Unit[UnitCycle].GetComponent<Unit>().Team)
+			{
+				UnitCycle++;
+				FindUnit();
+			}
+			else
+			{
+				CenterCamera(Unit[UnitCycle].transform.parent.gameObject, true);
+				OpenSideBar(false);
+				OpenSideBar(true, Unit[UnitCycle]);
+				UnitCycle++;
+			}
+		}
+		else
+		{
+			UnitCycle = 0;
+			FindUnit();
+		}
 	}
 
 	public void Cancel()
@@ -238,11 +262,11 @@ public class UI : MonoBehaviour
 		if(null != Selected)
 		{
 			Selected.GetComponent<Unit>().Draw(Selected.GetComponent<Unit>().LineOfSight+1, KeyTerm.SQUARE, KeyTerm.OUTLINE_INDEX, 1, 1, 1, 0);
-			PathFind.ClearRoute(Selected.GetComponent<Unit>().MoveRoute);
+			PathFinding.ClearRoute(Selected.GetComponent<Unit>().MoveRoute);
 		}
 		else
         {
-			PathFind.ClearRoute(Route);
+			PathFinding.ClearRoute(Route);
 		}
     	Selected = null;
 		ToggleIcon(false);
@@ -270,14 +294,14 @@ public class UI : MonoBehaviour
 	}
 	public void OpenSideBar(bool Switch, GameObject Target = null)
     {
-		Camera = GameObject.Find("MainCamera");
+		//Camera = GameObject.Find("MainCamera");
         GameObject SideBar = GameObject.Find("SideBar");
 		GameObject PlaceHolder = SideBar.transform.GetChild(0).gameObject;
 		GameObject PlaceInfo = SideBar.transform.GetChild(1).gameObject;
 		if (Switch)
 		{
 			int OffSet = 2;
-			for(int i=2; i<Target.transform.parent.childCount; i++)
+			for(int i=KeyTerm.LAND_INDEX; i<Target.transform.parent.childCount; i++)
 			{
 				GameObject Object = Instantiate(PlaceHolder);
 				Object.transform.parent = SideBar.transform;
@@ -302,11 +326,11 @@ public class UI : MonoBehaviour
 				AddText(Info.GetComponent<TextMesh>(), Object.GetComponent<PlaceHolder>().ActualUnit);
 				Info.SetActive(true);
 			}
-			Camera.GetComponent<Animator>().SetBool("Open", true);
+			ObjectReference.Camera.GetComponent<Animator>().SetBool("Open", true);
 		}
         else
 		{
-			Camera.GetComponent<Animator>().SetBool("Open", false);
+			ObjectReference.Camera.GetComponent<Animator>().SetBool("Open", false);
 			for(int i=2; i<SideBar.transform.childCount; i++)
 			{
 				Destroy(SideBar.transform.GetChild(i).gameObject);
@@ -357,30 +381,49 @@ public class UI : MonoBehaviour
 			}
 		}
 	}
-	public void CenterCamera(GameObject Target)
+	public void CenterCamera(GameObject Target, bool AbsoluteCenter = false)
     {
 		int TargetX = Target.GetComponent<Tile>().XCor;
 		int TargetY = Target.GetComponent<Tile>().YCor;
-		if(CenterX - TargetX > 1)
-        {
-			Camera.transform.position = new Vector3(Target.transform.position.x + 1, Camera.transform.position.y, -10);
-        }
-		else if(TargetX - CenterX > 7)
-        {
-			Camera.transform.position = new Vector3(Target.transform.position.x - 7, Camera.transform.position.y, -10);
-		}
-		if(TargetY - CenterY < -3)
-        {
-			Camera.transform.position = new Vector3(Camera.transform.position.x, Target.transform.position.y - 3, -10);
-		}
-		else if(CenterY - TargetY < -3)
+		for(int i = 0; i < LoadSizeX * 2; i++)
 		{
-			Camera.transform.position = new Vector3(Camera.transform.position.x, Target.transform.position.y + 3, -10);
+			for(int e = 0; e < LoadSizeY * 2; e++)
+			{
+				GameObject Tile = Tool.GetTile(CenterX - i + LoadSizeX, CenterY - e + LoadSizeY);
+				if(null != Tile)
+				{
+					Tile.SetActive(false);
+				}
+			}
 		}
-		if(Physics.Raycast(Camera.transform.position, Vector3.forward, out Hit, 11))
-		{
-			CenterX = Hit.transform.parent.GetComponent<Tile>().XCor;
-			CenterY = Hit.transform.parent.GetComponent<Tile>().YCor;
+		if(AbsoluteCenter)
+        {
+			ObjectReference.Camera.transform.position = new Vector3(Target.transform.position.x , Target.transform.position.y, -10);
+			CenterX = TargetX;
+			CenterY = TargetY;
+		}
+		else
+        {
+			if(CenterX - TargetX > 1)
+			{
+				ObjectReference.Camera.transform.position = new Vector3(Target.transform.position.x + 1, ObjectReference.Camera.transform.position.y, -10);
+				CenterX = TargetX + 1;
+			}
+			else if(TargetX - CenterX > 7)
+			{
+				ObjectReference.Camera.transform.position = new Vector3(Target.transform.position.x - 7, ObjectReference.Camera.transform.position.y, -10);
+				CenterX = TargetX - 7;
+			}
+			if(TargetY - CenterY < -3)
+			{
+				ObjectReference.Camera.transform.position = new Vector3(ObjectReference.Camera.transform.position.x, Target.transform.position.y - 3, -10);
+				CenterY = TargetY + 3;
+			}
+			else if(CenterY - TargetY < -3)
+			{
+				ObjectReference.Camera.transform.position = new Vector3(ObjectReference.Camera.transform.position.x, Target.transform.position.y + 3, -10);
+				CenterY = TargetY - 3;
+			}
 		}
 		for(int i = 0; i < LoadSizeX * 2; i++)
 		{
@@ -398,19 +441,19 @@ public class UI : MonoBehaviour
     {
     	if(!Check)
     	{
-    		CurrentPosition = Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition);
+    		CurrentPosition = ObjectReference.Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition);
    			Check = true;
  		}
 		else
 		{
-			NewPosition = Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition);
+			NewPosition = ObjectReference.Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition);
 			DispalyScreen();
     		Check = false;
 		}  
     }
 	void DispalyScreen()
 	{
-		if(Physics.Raycast(Camera.transform.position, Vector3.forward, out Hit, 11))
+		if(Physics.Raycast(ObjectReference.Camera.transform.position, Vector3.forward, out Hit, 11))
 		{
 			CenterX = Hit.transform.parent.GetComponent<Tile>().XCor;
 			CenterY = Hit.transform.parent.GetComponent<Tile>().YCor;
@@ -420,7 +463,7 @@ public class UI : MonoBehaviour
 			CenterX = 12;
 			CenterY = 6;
 			GameObject StartTile = Tool.GetTile(CenterX, CenterY);
-			Camera.transform.position = new Vector3(StartTile.transform.position.x, StartTile.transform.position.y, -10);
+			ObjectReference.Camera.transform.position = new Vector3(StartTile.transform.position.x, StartTile.transform.position.y, -10);
 			for(int i=0; i<LoadSizeX*2; i++)
 			{
 				for(int e=0; e<LoadSizeY*2; e++)
@@ -459,7 +502,7 @@ public class UI : MonoBehaviour
 			CenterY++;
 		}
 		GameObject NewCenter = Tool.GetTile(CenterX, CenterY);
-		Camera.transform.position = new Vector3(NewCenter.transform.position.x, NewCenter.transform.position.y, -10);
+		ObjectReference.Camera.transform.position = new Vector3(NewCenter.transform.position.x, NewCenter.transform.position.y, -10);
 	}
 	void DrawSide(string Side, bool Switch)
 	{

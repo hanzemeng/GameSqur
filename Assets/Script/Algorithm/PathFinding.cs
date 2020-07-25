@@ -11,12 +11,19 @@ public class FindTile
 
 public class PathFinding
 {
-	public UI UI;
-	public FindTile[] OpenList;
-	public FindTile[] CloseList;
-	public int OpenCount;
-	public int CloseCount;
-	public FindTile FindPath(GameObject Origin, GameObject Start, GameObject Finish, FindTile Previous = null)
+	static FindTile[] OpenList;
+	static FindTile[] CloseList;
+	static int OpenCount;
+	static int CloseCount;
+	public static void Initialize()
+    {
+		GridGen StartInfo = GameObject.Find("Initialize").GetComponent<GridGen>();
+		OpenList = new FindTile[StartInfo.MapRow * StartInfo.MapColumn];
+		CloseList = new FindTile[StartInfo.MapRow * StartInfo.MapColumn];
+		OpenCount = 0;
+		CloseCount = 0;
+	}
+	public static FindTile FindPath(GameObject Origin, GameObject Start, GameObject Finish, FindTile Previous = null)
 	{
 		if (Start == Finish)
 		{
@@ -48,11 +55,11 @@ public class PathFinding
 		int StartY = Start.GetComponent<Tile>().YCor;
 
 		bool Check = false;
-		if (Previous.Previous.Tile != UI.Tool.GetTile(StartX, StartY - 1) && null != UI.Tool.GetTile(StartX, StartY - 1))
+		if(Previous.Previous.Tile != Tool.GetTile(StartX, StartY - 1) && null != Tool.GetTile(StartX, StartY - 1))
 		{
 			FindTile Up = new FindTile();
 			Up.Previous = Previous;
-			Up.Tile = UI.Tool.GetTile(StartX, StartY - 1);
+			Up.Tile = Tool.GetTile(StartX, StartY - 1);
 			Up.TileScore = DistanceEstimate(Up.Tile, Finish) + DistanceEstimate(Up.Tile, Origin) + Previous.TileScore;
 			for (int i = 0; i < OpenCount; i++)
 			{
@@ -82,11 +89,11 @@ public class PathFinding
 			}
 		}
 		Check = false;
-		if (Previous.Previous.Tile != UI.Tool.GetTile(StartX, StartY + 1) && null != UI.Tool.GetTile(StartX, StartY + 1))
+		if (Previous.Previous.Tile != Tool.GetTile(StartX, StartY + 1) && null != Tool.GetTile(StartX, StartY + 1))
 		{
 			FindTile Down = new FindTile();
 			Down.Previous = Previous;
-			Down.Tile = UI.Tool.GetTile(StartX, StartY + 1);
+			Down.Tile = Tool.GetTile(StartX, StartY + 1);
 			Down.TileScore = DistanceEstimate(Down.Tile, Finish) + DistanceEstimate(Down.Tile, Origin) + Previous.TileScore;
 			for (int i = 0; i < OpenCount; i++)
 			{
@@ -116,15 +123,15 @@ public class PathFinding
 			}
 		}
 		Check = false;
-		if (Previous.Previous.Tile != UI.Tool.GetTile(StartX - 1, StartY) && null != UI.Tool.GetTile(StartX - 1, StartY))
+		if (Previous.Previous.Tile != Tool.GetTile(StartX - 1, StartY) && null != Tool.GetTile(StartX - 1, StartY))
 		{
 			FindTile Left = new FindTile();
 			Left.Previous = Previous;
-			Left.Tile = UI.Tool.GetTile(StartX - 1, StartY);
+			Left.Tile = Tool.GetTile(StartX - 1, StartY);
 			Left.TileScore = DistanceEstimate(Left.Tile, Finish) + DistanceEstimate(Left.Tile, Origin) + Previous.TileScore;
 			for (int i = 0; i < OpenCount; i++)
 			{
-				if (UI.Tool.GetTile(StartX - 1, StartY) == OpenList[i].Tile)
+				if (Tool.GetTile(StartX - 1, StartY) == OpenList[i].Tile)
 				{
 					if (OpenList[i].Previous.TileScore > Left.Previous.TileScore)
 					{
@@ -150,15 +157,15 @@ public class PathFinding
 			}
 		}
 		Check = false;
-		if (Previous.Previous.Tile != UI.Tool.GetTile(StartX + 1, StartY) && null != UI.Tool.GetTile(StartX + 1, StartY))
+		if (Previous.Previous.Tile != Tool.GetTile(StartX + 1, StartY) && null != Tool.GetTile(StartX + 1, StartY))
 		{
 			FindTile Right = new FindTile();
 			Right.Previous = Previous;
-			Right.Tile = UI.Tool.GetTile(StartX + 1, StartY);
+			Right.Tile = Tool.GetTile(StartX + 1, StartY);
 			Right.TileScore = DistanceEstimate(Right.Tile, Finish) + DistanceEstimate(Right.Tile, Origin) + Previous.TileScore;
 			for (int i = 0; i < OpenCount; i++)
 			{
-				if (UI.Tool.GetTile(StartX + 1, StartY) == OpenList[i].Tile)
+				if (Tool.GetTile(StartX + 1, StartY) == OpenList[i].Tile)
 				{
 					if (OpenList[i].Previous.TileScore > Right.Previous.TileScore)
 					{
@@ -197,7 +204,7 @@ public class PathFinding
 		}
 		return FindPath(Origin, OpenList[0].Tile, Finish, OpenList[0]);
 	}
-	float DistanceEstimate(GameObject Start, GameObject Target)
+	static float DistanceEstimate(GameObject Start, GameObject Target)
 	{
 		float Total = 1;
 		if (Start.transform.childCount > KeyTerm.LAND_INDEX && KeyTerm.LAND == Start.transform.GetChild(KeyTerm.LAND_INDEX).gameObject.name)
@@ -209,9 +216,9 @@ public class PathFinding
 		{
 			Total /= Start.transform.GetChild(KeyTerm.TERRAIN_INDEX).GetComponent<Tile>().SpeedModifier;
 		}
-		return UI.Tool.GetDistance(Start, Target) + Total;
+		return Tool.GetDistance(Start, Target) + Total;
 	}
-	public FindTile FlipRoute(FindTile Route)
+	public static FindTile FlipRoute(FindTile Route)
 	{
 		FindTile Current = Route;
 		FindTile Result = null;
@@ -225,7 +232,7 @@ public class PathFinding
 		Result = Result.Previous;
 		return Result;
 	}
-	public void DrawRoute(FindTile Route)
+	public static void DrawRoute(FindTile Route)
 	{
 		if (null != Route && null != Route.Tile)
 		{
@@ -233,7 +240,7 @@ public class PathFinding
 			DrawRoute(Route.Previous);
 		}
 	}
-	public void ClearRoute(FindTile Route)
+	public static void ClearRoute(FindTile Route)
     {
 		if (null != Route && null != Route.Tile)
 		{
@@ -241,7 +248,7 @@ public class PathFinding
 			ClearRoute(Route.Previous);
 		}
 	}
-	void Reset()
+	static void Reset()
     {
 		CloseList = new FindTile[CloseList.Length];
 		OpenList = new FindTile[OpenList.Length];
