@@ -67,7 +67,7 @@ public class Tile : MonoBehaviour
     	{
     		temp = Instantiate(GameObject.Find(Unit));
     		temp.name = GameObject.Find(Unit).name;
-			UI.Unit[UnitID] = temp;
+			UnitManage.Unit[UnitID] = temp;
 			temp.GetComponent<Unit>().Team = UnitTeam;
     		temp.transform.parent = transform;
     		temp.transform.position = new Vector3(transform.position.x, transform.position.y,-2);
@@ -81,7 +81,7 @@ public class Tile : MonoBehaviour
 
     	if(UI.MoveMode)
     	{
-    		UI.AddEvent(KeyTerm.MOVE_CMD, UI.Selected, gameObject);
+			UnitManage.AddEvent(KeyTerm.MOVE_CMD, UI.Selected, gameObject);
 			for(int i=0; i<gameObject.transform.parent.childCount; i++)
 			{
 				if(null != gameObject.transform.parent.GetChild(i).gameObject.GetComponent<Unit>())

@@ -84,7 +84,7 @@ public class Unit : MonoBehaviour
 	}
     public void OnSelecte()
     {
-		ObjectReference.UI.ToggleIcon(true, gameObject);
+		UI.ToggleIcon(true, gameObject);
 		PathFinding.DrawRoute(MoveRoute);
 	}
 
@@ -99,7 +99,7 @@ public class Unit : MonoBehaviour
 		}
 		if(transform.parent == Target.transform.parent)
 		{
-			ObjectReference.UI.ClearUnit(gameObject);
+			UnitManage.ClearUnit(gameObject);
 		}
 	}
 	public void AttackUnit(GameObject Target)
@@ -143,7 +143,7 @@ public class Unit : MonoBehaviour
 		{
 			Debug.Log(Message.OUT_OF_RANGE);
 		}
-		ObjectReference.UI.ClearUnit(gameObject);
+		UnitManage.ClearUnit(gameObject);
 	}
 
 	public void Draw(int Size, string Shape, int Type, float R, float G, float B, float transparency)
@@ -168,7 +168,7 @@ public class Unit : MonoBehaviour
 	}
 	void OnMouseDown()
     {
-		if(ObjectReference.UI.AttackMode)
+		if(UI.AttackMode)
 		{
 			int temp = 0;
 			for(int i=0; i<gameObject.transform.parent.childCount; i++)
@@ -180,25 +180,25 @@ public class Unit : MonoBehaviour
 			}
 			if(temp>1)
 			{
-				ObjectReference.UI.OpenSideBar(true, gameObject);
+				UI.OpenSideBar(true, gameObject);
 			}
 			else
 			{
-				ObjectReference.UI.AddEvent(KeyTerm.ATTACK_CMD, ObjectReference.UI.Selected, gameObject);
-				ObjectReference.UI.Cancel();
+				UnitManage.AddEvent(KeyTerm.ATTACK_CMD, UI.Selected, gameObject);
+				UI.Cancel();
 			}
 		}
-		else if(ObjectReference.UI.Destination)
+		else if(UI.Destination)
 		{
-			ObjectReference.UI.Destination = false;
+			UI.Destination = false;
 		}
 		else
 		{
-			ObjectReference.UI.OpenSideBar(false);
-			ObjectReference.UI.Selected = gameObject;
-			ObjectReference.UI.OpenSideBar(true, ObjectReference.UI.Selected);
-			ObjectReference.UI.CenterCamera(gameObject.transform.parent.gameObject);
-			if (Team == ObjectReference.UI.PlayerTeam)
+			UI.OpenSideBar(false);
+			UI.Selected = gameObject;
+			UI.OpenSideBar(true, UI.Selected);
+			UI.CenterCamera(gameObject.transform.parent.gameObject);
+			if (Team == UI.PlayerTeam)
 			{
 				OnSelecte();
 			}

@@ -17,9 +17,8 @@ public class PathFinding
 	static int CloseCount;
 	public static void Initialize()
     {
-		GridGen StartInfo = GameObject.Find("Initialize").GetComponent<GridGen>();
-		OpenList = new FindTile[StartInfo.MapRow * StartInfo.MapColumn];
-		CloseList = new FindTile[StartInfo.MapRow * StartInfo.MapColumn];
+		OpenList = new FindTile[ObjectReference.StartInfo.MapRow * ObjectReference.StartInfo.MapColumn];
+		CloseList = new FindTile[ObjectReference.StartInfo.MapRow * ObjectReference.StartInfo.MapColumn];
 		OpenCount = 0;
 		CloseCount = 0;
 	}

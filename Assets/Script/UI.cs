@@ -4,85 +4,58 @@ using UnityEngine.SceneManagement;
 
 public class UI : MonoBehaviour
 {
-	FindTile Route;
+	public static string PlayerTeam;
+	public static GameObject Selected;
+	public static bool MoveMode;
+	public static bool Destination;
+	public static bool AttackMode;
 
-	public string PlayerTeam;
-	
-	public GameObject[] Unit;
-	public GameObject[] Target;
-	public GameObject Selected;
-	public GameObject Move;
-	public bool MoveMode;
-	public bool Destination;
-	public GameObject Attack;
-	public bool AttackMode;
-	public GameObject Stop;
+	static int CurrentTurn;
+	static Vector3 CurrentPosition;
+	static Vector3 NewPosition;
+	static bool Check;
 
-	int CurrentTurn;
-	Vector3 CurrentPosition;
-	Vector3 NewPosition;
-	bool Check;
-	RaycastHit Hit;
-	int CenterX;
-	int CenterY;
-	int LoadSizeX;
-	int LoadSizeY;
-	int UnitCycle;
+	static RaycastHit Hit;
+	static int CenterX;
+	static int CenterY;
+	static int LoadSizeX;
+	static int LoadSizeY;
+
+	static FindTile Route;
+	static int UnitCycle;
 	
-	void Start()
+	public static void Initialize()
 	{
 		Cursor.SetCursor(null, Vector2.zero, CursorMode.ForceSoftware);
 		PlayerTeam = KeyTerm.BLUE;
 		CurrentTurn = 1;
-		Move = GameObject.Find(KeyTerm.MOVE_CMD);
-		Attack = GameObject.Find(KeyTerm.ATTACK_CMD);
-		Stop = GameObject.Find(KeyTerm.STOP_CMD);
 		LoadSizeX = 10;
 		LoadSizeY = 6;
 		Check = false;
 		UnitCycle = 0;
-		UpdateUnit();
-		SortUnit(0);
+	}
+
+    void Start()
+    {
+		UnitManage.UpdateUnit();
+		UnitManage.SortUnit(0);
 		OpenSideBar(false);
 		DispalyScreen();
 		UpdateFog();
 		AI.AIMove();
 	}
-	void FixedUpdate()
+    void Update()
 	{
 		if(Input.GetKey(KeyCode.Escape))
 		{
 			SceneManager.LoadScene("LevelSelect");
 		}
-
-		if(Input.GetMouseButton(1))
-        {
-			Cursor.SetCursor(ResourceFile.DragCursor, Vector2.zero, CursorMode.ForceSoftware);
-			DragScreen();
-        }
-		else if(Input.GetMouseButtonUp(1))
-        {
-			Cursor.SetCursor(null, Vector2.zero, CursorMode.ForceSoftware);
-			Check = false;
-        }
-	}
-	void Update()
-    {
-        if(Input.GetMouseButton(1))
-        {
-			Cancel();
-        }
-		else if(Input.GetMouseButtonUp(1))
-        {
-			Cursor.SetCursor(null, Vector2.zero, CursorMode.ForceSoftware);
-			Check = false;
-        }
-		if(Input.GetKeyDown("e"))
+		else if(Input.GetKeyDown("e"))
 		{
 			Cancel();
 			CurrentTurn++;
-			GameObject.Find("TurnCount").GetComponent<TextMesh>().text = CurrentTurn.ToString();
-			UpdateEvent();
+			ObjectReference.Turn.text = CurrentTurn.ToString();
+			UnitManage.UpdateEvent();
 			UpdateFog();
 			AI.AIMove();
 		}
@@ -90,10 +63,23 @@ public class UI : MonoBehaviour
 		{
 			FindUnit();
 		}
+
+		if(Input.GetMouseButton(1))
+        {
+			Cursor.SetCursor(ResourceFile.DragCursor, Vector2.zero, CursorMode.ForceSoftware);
+			DragScreen();
+			Cancel();
+		}
+		else if(Input.GetMouseButtonUp(1))
+        {
+			Cursor.SetCursor(null, Vector2.zero, CursorMode.ForceSoftware);
+			Check = false;
+        }
+		
 		if(MoveMode)
 		{
 			PathFinding.ClearRoute(Route);
-			if (Physics.Raycast(ObjectReference.Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition), Vector3.forward, out Hit, 11))
+			if(Physics.Raycast(ObjectReference.Camera.GetComponent<Camera>().ScreenToWorldPoint(Input.mousePosition), Vector3.forward, out Hit, 11))
 			{
 				int MouseX = Hit.transform.parent.GetComponent<Tile>().XCor;
 				int MouseY = Hit.transform.parent.GetComponent<Tile>().YCor;
@@ -102,161 +88,8 @@ public class UI : MonoBehaviour
 			}
 		}
 	}
-    public void AddEvent(string EventType, GameObject Executor, GameObject TargetObject)
-    {
-		ClearUnit(Executor);
-		if(KeyTerm.MOVE_CMD == EventType)
-		{
-			if(Executor.transform.parent.GetComponent<Tile>().XCor == TargetObject.transform.parent.GetComponent<Tile>().XCor && Executor.transform.parent.GetComponent<Tile>().YCor == TargetObject.transform.parent.GetComponent<Tile>().YCor)
-			{
-				Debug.Log(Message.SAME_LOCATION);
-				return;
-			}
-			else
-			{
-				Executor.GetComponent<Unit>().MoveNeed = TargetObject.GetComponent<Tile>().MoveRequire;
-				Executor.GetComponent<Unit>().MoveRoute = PathFinding.FlipRoute(PathFinding.FindPath(Executor.transform.parent.gameObject, Executor.transform.parent.gameObject, TargetObject.transform.parent.gameObject));
-			}
-		}
-		else if(KeyTerm.ATTACK_CMD == EventType)
-		{
-			if(null == TargetObject.GetComponent<Unit>())
-			{
-				Debug.Log(Message.NOT_A_UNIT);
-				return;
-			}
-			else
-			{
-				Executor.GetComponent<Unit>().MoveNeed = Executor.GetComponent<Unit>().AttackNeed;
-			}
-		}
-		Target[Executor.GetComponent<Unit>().UnitID] = TargetObject;
-		Executor.GetComponent<Unit>().MovePoint = 0;
-		Executor.GetComponent<Unit>().Action = EventType;
-		Executor.GetComponent<SpriteRenderer>().color = Color.red;
-    }
-	void UpdateEvent()
-	{
-		for(int i=0; i<Unit.Length; i++)
-    	{
-			SortUnit(i);
-			if(KeyTerm.NONE != Unit[i].GetComponent<Unit>().Action)
-			{
-				Unit[i].GetComponent<Unit>().MovePoint += Unit[i].GetComponent<Unit>().GetProperty(KeyTerm.SPEED);
-				if(Unit[i].GetComponent<Unit>().MovePoint > Unit[i].GetComponent<Unit>().MoveNeed-1)
-    			{
-					if(KeyTerm.MOVE_CMD == Unit[i].GetComponent<Unit>().Action)
-					{
-						Unit[i].GetComponent<Unit>().MoveTo(Target[i]);
-					}
-					else if(KeyTerm.ATTACK_CMD == Unit[i].GetComponent<Unit>().Action)
-					{	
-						Unit[i].GetComponent<Unit>().AttackUnit(Target[i]);
-					}
-					Unit[i].GetComponent<Unit>().MovePoint = 0;
-				}
-				UpdateUnit(); 
-				RemoveUnit();
-			} 		
-		}
-	}
-	void SortUnit(int Start)
-	{
-		for (int i = Start; i < Unit.Length; i++)
-		{
-			for (int e = i + 1; e < Unit.Length; e++)
-			{
-				if (Unit[i].GetComponent<Unit>().GetProperty(KeyTerm.SPEED) < Unit[e].GetComponent<Unit>().GetProperty(KeyTerm.SPEED))
-				{
-					GameObject temp = Unit[i];
-					Unit[i] = Unit[e];
-					Unit[e] = temp;
-					temp = Target[i];
-					Target[i] = Target[e];
-					Target[e] = temp;
-				}
-			}
-		}
-		for (int i = Start; i < Unit.Length; i++)
-		{
-			Unit[i].GetComponent<Unit>().UnitID = i;
-		}
-	}
-	void UpdateUnit()
-	{
-		for(int i=0; i<Unit.Length; i++)
-		{
-			Unit[i].GetComponent<Unit>().ModifyUnit();
-		}
-	}
-    void RemoveUnit()
-    {
-    	GameObject[] tempUnit = Unit;
-    	GameObject[] tempTarget = Target;
-    	for(int i=0; i<Unit.Length; i++)
-    	{
-    		if(Unit[i].GetComponent<Unit>().HitPoint<=0)
-    		{
-				Unit[i].GetComponent<Unit>().Draw(Unit[i].GetComponent<Unit>().LineOfSight, KeyTerm.SQUARE, KeyTerm.WARFOG_INDEX, 0,0,0, 0.5f);
-    			Destroy(Unit[i]);
-    			Target[i] = null;
-    			tempUnit = new GameObject[Unit.Length - 1];
-    			tempTarget = new GameObject[Unit.Length - 1];
-    			for(int e=0; e<Unit.Length-1; e++)
-    			{
-    				if(e<i)
-    				{
-    					tempUnit[e] = Unit[e];
-    					tempTarget[e] = Target[e];
-    				}
-    				else
-    				{
-    					tempUnit[e] = Unit[e+1];
-    					tempUnit[e].GetComponent<Unit>().UnitID--;
-    					tempTarget[e] = Target[e+1];
-    				}
-    			}
-    			i--;
-    		}
-    		Unit = tempUnit;
-    		Target = tempTarget;
-    	}
-    }
-	public void ClearUnit(GameObject Unit)
-	{
-		Unit.GetComponent<SpriteRenderer>().color = Color.white;
-		Unit.GetComponent<Unit>().Action = KeyTerm.NONE;
-		Unit.GetComponent<Unit>().MovePoint = 0;
-		Unit.GetComponent<Unit>().MoveNeed = 0;
-		PathFinding.ClearRoute(Unit.GetComponent<Unit>().MoveRoute);
-		Unit.GetComponent<Unit>().MoveRoute = null;
-		Target[Unit.GetComponent<Unit>().UnitID] = null;
-	}
-	void FindUnit()
-	{
-		if(UnitCycle < Unit.Length)
-		{
-			if(PlayerTeam != Unit[UnitCycle].GetComponent<Unit>().Team)
-			{
-				UnitCycle++;
-				FindUnit();
-			}
-			else
-			{
-				CenterCamera(Unit[UnitCycle].transform.parent.gameObject, true);
-				OpenSideBar(false);
-				OpenSideBar(true, Unit[UnitCycle]);
-				UnitCycle++;
-			}
-		}
-		else
-		{
-			UnitCycle = 0;
-			FindUnit();
-		}
-	}
 
-	public void Cancel()
+	public static void Cancel()
     {
 		OpenSideBar(false);
 		if(null != Selected)
@@ -271,30 +104,29 @@ public class UI : MonoBehaviour
     	Selected = null;
 		ToggleIcon(false);
 	}
-	public void ToggleIcon(bool Switch, GameObject Unit = null)
+	public static void ToggleIcon(bool Switch, GameObject Unit = null)
 	{
 		GameObject Icon = GameObject.Find("Icon");
 		if(Switch)
         {
-			Move.SetActive(true);
-			Attack.SetActive(true);
-			Stop.SetActive(true);
+			ObjectReference.Move.SetActive(true);
+			ObjectReference.Attack.SetActive(true);
+			ObjectReference.Stop.SetActive(true);
 			Icon.transform.position = new Vector3(Unit.transform.parent.position.x, Unit.transform.parent.position.y, -3);
 			Icon.GetComponent<Animator>().SetBool("Play", true);
 		}
 		else
         {
-			Move.SetActive(false);
+			ObjectReference.Move.SetActive(false);
 			MoveMode = false;
-			Attack.SetActive(false);
+			ObjectReference.Attack.SetActive(false);
 			AttackMode = false;
-			Stop.SetActive(false);
+			ObjectReference.Stop.SetActive(false);
 			Icon.GetComponent<Animator>().SetBool("Play", false);
 		}
 	}
-	public void OpenSideBar(bool Switch, GameObject Target = null)
+	public static void OpenSideBar(bool Switch, GameObject Target = null)
     {
-		//Camera = GameObject.Find("MainCamera");
         GameObject SideBar = GameObject.Find("SideBar");
 		GameObject PlaceHolder = SideBar.transform.GetChild(0).gameObject;
 		GameObject PlaceInfo = SideBar.transform.GetChild(1).gameObject;
@@ -337,7 +169,7 @@ public class UI : MonoBehaviour
 			}
 		}
     }
-	void AddText(TextMesh Text, GameObject Unit)
+	static void AddText(TextMesh Text, GameObject Unit)
 	{
 		if(null != Unit)
 		{
@@ -357,31 +189,54 @@ public class UI : MonoBehaviour
 		}
 	}
 
-	void UpdateFog()
+	static void UpdateFog()
 	{
-		for(int i=0; i<Unit.Length; i++)
+		for(int i=0; i< UnitManage.Unit.Length; i++)
 		{
-			if(Unit[i].GetComponent<Unit>().Team == PlayerTeam)
+			if(UnitManage.Unit[i].GetComponent<Unit>().Team == PlayerTeam)
 			{
-				Unit[i].GetComponent<Unit>().Draw(Unit[i].GetComponent<Unit>().LineOfSight, KeyTerm.SQUARE, KeyTerm.WARFOG_INDEX, 0, 0, 0, 0);
+				UnitManage.Unit[i].GetComponent<Unit>().Draw(UnitManage.Unit[i].GetComponent<Unit>().LineOfSight, KeyTerm.SQUARE, KeyTerm.WARFOG_INDEX, 0, 0, 0, 0);
 			}
 		}
-		for(int i=0; i<Unit.Length; i++)
+		for(int i=0; i< UnitManage.Unit.Length; i++)
 		{
-			if(Unit[i].GetComponent<Unit>().Team != PlayerTeam)
+			if(UnitManage.Unit[i].GetComponent<Unit>().Team != PlayerTeam)
 			{
-				if (Unit[i].transform.parent.GetChild(KeyTerm.WARFOG_INDEX).gameObject.GetComponent<SpriteRenderer>().color == new Color(0, 0, 0, 0))
+				if(UnitManage.Unit[i].transform.parent.GetChild(KeyTerm.WARFOG_INDEX).gameObject.GetComponent<SpriteRenderer>().color == new Color(0, 0, 0, 0))
 				{
-					Unit[i].SetActive(true);
+					UnitManage.Unit[i].SetActive(true);
 				}
 				else
 				{
-					Unit[i].SetActive(false);
+					UnitManage.Unit[i].SetActive(false);
 				}
 			}
 		}
 	}
-	public void CenterCamera(GameObject Target, bool AbsoluteCenter = false)
+	void FindUnit()
+	{
+		if(UnitCycle < UnitManage.Unit.Length)
+		{
+			if(PlayerTeam != UnitManage.Unit[UnitCycle].GetComponent<Unit>().Team)
+			{
+				UnitCycle++;
+				FindUnit();
+			}
+			else
+			{
+				CenterCamera(UnitManage.Unit[UnitCycle].transform.parent.gameObject, true);
+				OpenSideBar(false);
+				OpenSideBar(true, UnitManage.Unit[UnitCycle]);
+				UnitCycle++;
+			}
+		}
+		else
+		{
+			UnitCycle = 0;
+			FindUnit();
+		}
+	}
+	public static void CenterCamera(GameObject Target, bool AbsoluteCenter = false)
     {
 		int TargetX = Target.GetComponent<Tile>().XCor;
 		int TargetY = Target.GetComponent<Tile>().YCor;
@@ -451,7 +306,7 @@ public class UI : MonoBehaviour
     		Check = false;
 		}  
     }
-	void DispalyScreen()
+	static void DispalyScreen()
 	{
 		if(Physics.Raycast(ObjectReference.Camera.transform.position, Vector3.forward, out Hit, 11))
 		{
@@ -504,7 +359,7 @@ public class UI : MonoBehaviour
 		GameObject NewCenter = Tool.GetTile(CenterX, CenterY);
 		ObjectReference.Camera.transform.position = new Vector3(NewCenter.transform.position.x, NewCenter.transform.position.y, -10);
 	}
-	void DrawSide(string Side, bool Switch)
+	static void DrawSide(string Side, bool Switch)
 	{
 		if("Up" == Side)
 		{

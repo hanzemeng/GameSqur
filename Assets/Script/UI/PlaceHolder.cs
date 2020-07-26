@@ -16,7 +16,7 @@ public class PlaceHolder : MonoBehaviour
         UI UI = GameObject.Find("UI").GetComponent<UI>();
         if(UI.AttackMode)
         {
-            UI.AddEvent("Attack", UI.Selected, ActualUnit);
+            UnitManage.AddEvent("Attack", UI.Selected, ActualUnit);
             UI.Cancel();
             return;
         }

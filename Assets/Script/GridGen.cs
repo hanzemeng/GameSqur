@@ -23,11 +23,10 @@ public class GridGen : MonoBehaviour
 	
     void InitializeClass()
     {
-		ObjectReference.UI.Unit = new GameObject[TotalUnit];
-		ObjectReference.UI.Target = new GameObject[TotalUnit];
+		UnitManage.Initialize();
 		Tool.Initialize();
 		PathFinding.Initialize();
-        AI.Initialize();
+		UI.Initialize();
 	}
 	void MapEdit()
     {

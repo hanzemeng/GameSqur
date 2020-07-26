@@ -7,11 +7,9 @@ public class Tool
 	static GameObject[][] Map;
 	public static void Initialize()
 	{
-		GridGen StartInfo = GameObject.Find("Initialize").GetComponent<GridGen>();
-		MapSizeX = StartInfo.MapRow;
-		MapSizeY = StartInfo.MapColumn;
-		Map = StartInfo.tempMap;
-
+		MapSizeX = ObjectReference.StartInfo.MapRow;
+		MapSizeY = ObjectReference.StartInfo.MapColumn;
+		Map = ObjectReference.StartInfo.tempMap;
 	}
 	public static GameObject GetTile(int XCor, int YCor)
 	{

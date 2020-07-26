@@ -2,48 +2,43 @@
 
 public class AI
 {
-	static UI UI = null;
-	public static void Initialize()
-    {
-		UI = GameObject.Find("UI").GetComponent<UI>();
-	}
 	public static void AIMove()
 	{
-		for(int i = 0; i < UI.Unit.Length; i++)
+		for(int i = 0; i < UnitManage.Unit.Length; i++)
 		{
-			if(UI.PlayerTeam != UI.Unit[i].GetComponent<Unit>().Team)
+			if(UI.PlayerTeam != UnitManage.Unit[i].GetComponent<Unit>().Team)
 			{
 				GameObject Victim = null;
-				if(KeyTerm.NONE == UI.Unit[i].GetComponent<Unit>().Action)
+				if(KeyTerm.NONE == UnitManage.Unit[i].GetComponent<Unit>().Action)
 				{
-					Victim = CheckEnemy(UI.Unit[i], UI.Unit[i].GetComponent<Unit>().AttackRange, UI.Unit[i].GetComponent<Unit>().AttackRangeType);
+					Victim = CheckEnemy(UnitManage.Unit[i], UnitManage.Unit[i].GetComponent<Unit>().AttackRange, UnitManage.Unit[i].GetComponent<Unit>().AttackRangeType);
 					if(null != Victim)
 					{
-						UI.AddEvent(KeyTerm.ATTACK_CMD, UI.Unit[i], Victim);
+						UnitManage.AddEvent(KeyTerm.ATTACK_CMD, UnitManage.Unit[i], Victim);
 					}
 					else
 					{
-						Victim = CheckEnemy(UI.Unit[i], UI.Unit[i].GetComponent<Unit>().DetectRange, KeyTerm.SQUARE);
+						Victim = CheckEnemy(UnitManage.Unit[i], UnitManage.Unit[i].GetComponent<Unit>().DetectRange, KeyTerm.SQUARE);
 						if(null != Victim)
 						{
-							UI.AddEvent(KeyTerm.MOVE_CMD, UI.Unit[i], Victim.transform.parent.GetChild(KeyTerm.LAND_INDEX).gameObject);
+							UnitManage.AddEvent(KeyTerm.MOVE_CMD, UnitManage.Unit[i], Victim.transform.parent.GetChild(KeyTerm.LAND_INDEX).gameObject);
 						}
 					}
 				}
-				if(KeyTerm.MOVE_CMD == UI.Unit[i].GetComponent<Unit>().Action)
+				if(KeyTerm.MOVE_CMD == UnitManage.Unit[i].GetComponent<Unit>().Action)
 				{
-					Victim = CheckEnemy(UI.Unit[i], UI.Unit[i].GetComponent<Unit>().AttackRange, UI.Unit[i].GetComponent<Unit>().AttackRangeType);
+					Victim = CheckEnemy(UnitManage.Unit[i], UnitManage.Unit[i].GetComponent<Unit>().AttackRange, UnitManage.Unit[i].GetComponent<Unit>().AttackRangeType);
 					if(null != Victim)
 					{
-						UI.AddEvent(KeyTerm.ATTACK_CMD, UI.Unit[i], Victim);
+						UnitManage.AddEvent(KeyTerm.ATTACK_CMD, UnitManage.Unit[i], Victim);
 					}
 				}
-				if(KeyTerm.ATTACK_CMD == UI.Unit[i].GetComponent<Unit>().Action)
+				if(KeyTerm.ATTACK_CMD == UnitManage.Unit[i].GetComponent<Unit>().Action)
 				{
-					Victim = CheckEnemy(UI.Unit[i], UI.Unit[i].GetComponent<Unit>().AttackRange, UI.Unit[i].GetComponent<Unit>().AttackRangeType);
-					if(UI.Target[i] != Victim)
+					Victim = CheckEnemy(UnitManage.Unit[i], UnitManage.Unit[i].GetComponent<Unit>().AttackRange, UnitManage.Unit[i].GetComponent<Unit>().AttackRangeType);
+					if(UnitManage.Target[i] != Victim)
 					{
-						UI.ClearUnit(UI.Unit[i]);
+						UnitManage.ClearUnit(UnitManage.Unit[i]);
 						AIMove();
 					}
 				}
