@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		560C432B80EFE8663BD5FCF7 /* libMonoPosixHelper.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 72E84FEFABB233D8328ACBB5 /* libMonoPosixHelper.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		5DF8435EBCD56EA593720DE4 /* MonoBleedingEdge in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3B7A4119B75F4FFCA187C155 /* MonoBleedingEdge */; };
+		67B04BE0BC08199FA89EA406 /* libMonoPosixHelper.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C8CA492EBC32ECCCD7B18017 /* libMonoPosixHelper.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		750575B4214B38CE004B1B34 /* UnityPlayer.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 750575B3214B38CE004B1B34 /* UnityPlayer.dylib */; };
 		750575B5214B3DF2004B1B34 /* UnityPlayer.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 750575B3214B38CE004B1B34 /* UnityPlayer.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		752CA83E2149E6C400295EFC /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 752CA83D2149E6C400295EFC /* Main.cpp */; };
@@ -18,30 +19,18 @@
 		75E7179121715210002B2479 /* DefaultPreferences.plist in Resources */ = {isa = PBXBuildFile; fileRef = 75E7178E21715210002B2479 /* DefaultPreferences.plist */; };
 		75E7179221715210002B2479 /* Data in Resources */ = {isa = PBXBuildFile; fileRef = 75E7178F21715210002B2479 /* Data */; };
 		75E7179321715210002B2479 /* PlayerIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 75E7179021715210002B2479 /* PlayerIcon.icns */; };
-		9FE64C7393EF8624BDFA75B4 /* MonoBleedingEdge in CopyFiles */ = {isa = PBXBuildFile; fileRef = ECF74C91AF686334B6376BD2 /* MonoBleedingEdge */; };
-		C68345DABE89FB3721D9B11C /* libmonobdwgc-2.0.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BD474B16B380D724AC2DBDEF /* libmonobdwgc-2.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		F2F749B084E870C0478E2ADA /* libmonobdwgc-2.0.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 45554ABB998232E2DAF0A862 /* libmonobdwgc-2.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		32844E9EB66A2A725771D958 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = Contents;
-			dstSubfolderSpec = 1;
-			files = (
-				9FE64C7393EF8624BDFA75B4 /* MonoBleedingEdge in CopyFiles */,
-			);
-			name = CopyFiles;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		5B3D4B468F7E6A5D4E2A84CD /* Embed Frameworks */ = {
+		06814B7CB2472BEDD28301AD /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				C68345DABE89FB3721D9B11C /* libmonobdwgc-2.0.dylib in Embed Frameworks */,
-				560C432B80EFE8663BD5FCF7 /* libMonoPosixHelper.dylib in Embed Frameworks */,
+				F2F749B084E870C0478E2ADA /* libmonobdwgc-2.0.dylib in Embed Frameworks */,
+				67B04BE0BC08199FA89EA406 /* libMonoPosixHelper.dylib in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -59,10 +48,22 @@
 			name = "Embed Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BF0349229E05D055E72B6639 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents;
+			dstSubfolderSpec = 1;
+			files = (
+				5DF8435EBCD56EA593720DE4 /* MonoBleedingEdge in CopyFiles */,
+			);
+			name = CopyFiles;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		72E84FEFABB233D8328ACBB5 /* libMonoPosixHelper.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libMonoPosixHelper.dylib; path = GameSqur/Frameworks/libMonoPosixHelper.dylib; sourceTree = SOURCE_ROOT; };
+		3B7A4119B75F4FFCA187C155 /* MonoBleedingEdge */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MonoBleedingEdge; path = GameSqur/MonoBleedingEdge; sourceTree = SOURCE_ROOT; };
+		45554ABB998232E2DAF0A862 /* libmonobdwgc-2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libmonobdwgc-2.0.dylib"; path = "GameSqur/Frameworks/libmonobdwgc-2.0.dylib"; sourceTree = SOURCE_ROOT; };
 		750575B3214B38CE004B1B34 /* UnityPlayer.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = UnityPlayer.dylib; path = GameSqur/Frameworks/UnityPlayer.dylib; sourceTree = "<group>"; };
 		752CA8282149E6C100295EFC /* GameSqur.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameSqur.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		752CA83C2149E6C400295EFC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -74,8 +75,7 @@
 		75E7178E21715210002B2479 /* DefaultPreferences.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = DefaultPreferences.plist; path = GameSqur/Resources/DefaultPreferences.plist; sourceTree = "<group>"; };
 		75E7178F21715210002B2479 /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Data; path = GameSqur/Resources/Data; sourceTree = "<group>"; };
 		75E7179021715210002B2479 /* PlayerIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = PlayerIcon.icns; path = GameSqur/Resources/PlayerIcon.icns; sourceTree = "<group>"; };
-		BD474B16B380D724AC2DBDEF /* libmonobdwgc-2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libmonobdwgc-2.0.dylib"; path = "GameSqur/Frameworks/libmonobdwgc-2.0.dylib"; sourceTree = SOURCE_ROOT; };
-		ECF74C91AF686334B6376BD2 /* MonoBleedingEdge */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MonoBleedingEdge; path = GameSqur/MonoBleedingEdge; sourceTree = SOURCE_ROOT; };
+		C8CA492EBC32ECCCD7B18017 /* libMonoPosixHelper.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libMonoPosixHelper.dylib; path = GameSqur/Frameworks/libMonoPosixHelper.dylib; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,6 +90,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		19774C0D87F524BA9443BECA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				45554ABB998232E2DAF0A862 /* libmonobdwgc-2.0.dylib */,
+				C8CA492EBC32ECCCD7B18017 /* libMonoPosixHelper.dylib */,
+			);
+			path = Frameworks;
+			sourceTree = "<group>";
+		};
 		750575B2214B38CE004B1B34 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -124,8 +133,8 @@
 				752CA83C2149E6C400295EFC /* Info.plist */,
 				752CA83D2149E6C400295EFC /* Main.cpp */,
 				75D4238B2153338200782C91 /* MainMenu.xib */,
-				D54045E58C7A95255D1FEAEC /* Frameworks */,
-				ECF74C91AF686334B6376BD2 /* MonoBleedingEdge */,
+				19774C0D87F524BA9443BECA /* Frameworks */,
+				3B7A4119B75F4FFCA187C155 /* MonoBleedingEdge */,
 			);
 			path = GameSqur;
 			sourceTree = "<group>";
@@ -141,15 +150,6 @@
 			name = Resources;
 			sourceTree = "<group>";
 		};
-		D54045E58C7A95255D1FEAEC /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				BD474B16B380D724AC2DBDEF /* libmonobdwgc-2.0.dylib */,
-				72E84FEFABB233D8328ACBB5 /* libMonoPosixHelper.dylib */,
-			);
-			path = Frameworks;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -161,8 +161,8 @@
 				752CA8252149E6C100295EFC /* Frameworks */,
 				752CA8262149E6C100295EFC /* Resources */,
 				750575B6214B3DF2004B1B34 /* Embed Libraries */,
-				5B3D4B468F7E6A5D4E2A84CD /* Embed Frameworks */,
-				32844E9EB66A2A725771D958 /* CopyFiles */,
+				06814B7CB2472BEDD28301AD /* Embed Frameworks */,
+				BF0349229E05D055E72B6639 /* CopyFiles */,
 			);
 			buildRules = (
 			);
